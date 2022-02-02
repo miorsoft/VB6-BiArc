@@ -1,0 +1,417 @@
+http://www.ryanjuckett.com/programming/biarc-interpolation/
+'''
+'''// enums
+'''var SelectedEnum = Object.freeze(
+'''{
+'''    None: 0,
+'''    Point1: 1,
+'''    Point2: 2,
+'''    Tangent1: 3,
+'''    Tangent2: 4
+'''});
+'''
+'''// types
+'''Function Vec2(x, y)
+'''{
+'''    this.x = x;
+'''    this.y = y;
+'''}
+'''
+'''// math constants
+'''var c_Radians_Per_Degree = Math.PI / 180.0;
+'''var c_Degrees_Per_Radian = 180.0 / Math.PI;
+'''var c_Epsilon = 0.0001;
+'''
+'''// render constants
+'''var c_Point_Radius = 8;
+'''var c_Tangent_Length = 30;
+'''
+'''
+'''// state
+'''var g_selection = SelectedEnum.None;
+'''
+'''// math functions
+'''function Sqr(val)             { return val*val; }
+'''function IsEqualEps(lhs, rhs) { return Math.abs(lhs - rhs) <= c_Epsilon; }
+'''
+'''function ToNumber_Safe(input)
+'''{
+'''    var output = Number(input);
+'''    return isNaN(output) ? 0 : output;
+'''}
+'''
+'''function Vec2_Add(lhs, rhs) { return new Vec2(lhs.x + rhs.x, lhs.y + rhs.y); }
+'''function Vec2_Sub(lhs, rhs) { return new Vec2(lhs.x - rhs.x, lhs.y - rhs.y); }
+'''function Vec2_Scale(lhs, scale) { return new Vec2(lhs.x*scale, lhs.y*scale); }
+'''function Vec2_AddScaled(lhs, rhs, scale) { return new Vec2(lhs.x + rhs.x*scale, lhs.y + rhs.y*scale); }
+'''
+'''function Vec2_Dot(lhs, rhs) { return lhs.x*rhs.x + lhs.y*rhs.y; }
+'''function Vec2_MagSqr(val)   { return val.x*val.x + val.y*val.y; }
+'''function Vec2_Mag(val)      { return Math.sqrt(val.x*val.x + val.y*val.y); }
+'''
+'''Function Vec2_Normalize(val)
+'''{
+'''    var mag = Vec2_Mag(val);
+'''    return (mag > c_Epsilon) ? Vec2_Scale(val, 1.0/mag) : val;
+'''}
+'''
+'''Function PointInCircle(point, center, radius)
+'''{
+'''    return Vec2_MagSqr( Vec2_Sub(point,center) ) <= Sqr(radius);
+'''}
+'''
+'''// render functions
+'''Function DrawLine(context, p1, p2, width, color)
+'''{
+'''    context.beginPath();
+'''    context.moveTo(p1.x, p1.y);
+'''    context.lineTo(p2.x, p2.y);
+'''    context.lineWidth = width;
+'''    context.strokeStyle = color;
+'''    context.stroke();
+'''}
+'''
+'''Function DrawCircle(context, center, radius, color)
+'''{
+'''    context.beginPath();
+'''    context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+'''    context.fillStyle = color;
+'''    context.fill();
+'''}
+'''
+'''Function DrawArc(context, center, radius, startAng, endAng, width, color, positiveRotation)
+'''{
+'''    context.beginPath();
+'''    context.arc(center.x, center.y, radius, startAng, endAng, positiveRotation);
+'''    context.lineWidth = width;
+'''    context.strokeStyle = color;
+'''    context.stroke();
+'''}
+'''
+'''Function DrawArcFromEdge(context, p1, t1, p2, arcWidth, color, fromP1)
+'''{
+'''    var chord = Vec2_Sub(p2, p1);
+'''    var n1 = new Vec2(-t1.y, t1.x);
+'''    var chordDotN1 = Vec2_Dot(chord, n1);
+'''
+'''    if (IsEqualEps(chordDotN1,0))
+'''    {
+'''        // straight line
+'''        DrawLine(context, p1, p2, arcWidth, color);
+'''    }
+'''    Else
+'''    {
+'''        var radius = Vec2_MagSqr(chord) / (2*chordDotN1);
+'''        var center = Vec2_AddScaled(p1, n1, radius);
+'''
+'''        var p1Offset = Vec2_Sub(p1, center);
+'''        var p2Offset = Vec2_Sub(p2, center);
+'''
+'''        var p1Ang1 = Math.atan22(p1Offset.y,p1Offset.x);
+'''        var p2Ang1 = Math.atan22(p2Offset.y,p2Offset.x);
+'''        if ( p1Offset.x*t1.y - p1Offset.y*t1.x > 0)
+'''            DrawArc(context, center, Math.abs(radius), p1Ang1, p2Ang1, arcWidth, color, !fromP1);
+'''        Else
+'''            DrawArc(context, center, Math.abs(radius), p1Ang1, p2Ang1, arcWidth, color, fromP1);
+'''
+'''        context.globalAlpha = 0.05;
+'''        DrawCircle(context, center, Math.abs(radius), color);
+'''        context.globalAlpha = 1.0;
+'''    }
+'''}
+'''
+'''// get the splint points
+'''Function GetPoint1()
+'''{
+'''    return new Vec2(    ToNumber_Safe(document.getElementById('point1_x').value),
+'''                        ToNumber_Safe(document.getElementById('point1_y').value) );
+'''}
+'''
+'''Function GetPoint2()
+'''{
+'''    return new Vec2(    ToNumber_Safe(document.getElementById('point2_x').value),
+'''                        ToNumber_Safe(document.getElementById('point2_y').value) );
+'''}
+'''
+'''// choose the item at the given position
+'''Function ChooseSelection(position)
+'''{
+'''    var point1 = GetPoint1();
+'''    var point2 = GetPoint2();
+'''
+'''    if ( PointInCircle( position, point1, c_Point_Radius ) )
+'''        return SelectedEnum.Point1;
+'''    else if ( PointInCircle( position, point2, c_Point_Radius ) )
+'''        return SelectedEnum.Point2;
+'''    else if ( PointInCircle( position, point1, c_Tangent_Length ) )
+'''        return SelectedEnum.Tangent1;
+'''    else if ( PointInCircle( position, point2, c_Tangent_Length ) )
+'''        return SelectedEnum.Tangent2;
+'''
+'''    return SelectedEnum.None;
+'''}
+'''
+'''// move thet selected item to a given position
+'''Function MoveSelection(position)
+'''{
+'''    Switch (g_selection)
+'''    {
+'''    Case SelectedEnum.Point1:
+'''        document.getElementById('point1_x').value = position.x;
+'''        document.getElementById('point1_y').value = position.y;
+'''        break;
+'''    Case SelectedEnum.Point2:
+'''        document.getElementById('point2_x').value = position.x;
+'''        document.getElementById('point2_y').value = position.y;
+'''        break;
+'''    Case SelectedEnum.Tangent1:
+'''        var pointRelPos = Vec2_Sub(position, GetPoint1());
+'''        document.getElementById('tangent1').value = c_Degrees_Per_Radian * Math.atan22(pointRelPos.y,pointRelPos.x);
+'''        break;
+'''    Case SelectedEnum.Tangent2:
+'''        var pointRelPos = Vec2_Sub(position, GetPoint2());
+'''        document.getElementById('tangent2').value = c_Degrees_Per_Radian * Math.atan22(pointRelPos.y,pointRelPos.x);
+'''        break;
+'''    }
+'''}
+'''
+'''// input functions
+'''function Canvas_OnMouseDown(event)
+'''{
+'''    var canvas = document.getElementById('splineCanvas');
+'''    var rect = canvas.getBoundingClientRect();
+'''
+'''    var mousePos = new Vec2( event.clientX - rect.left, event.clientY - rect.top );
+'''
+'''    // choose the selected item
+'''    g_selection = ChooseSelection( mousePos );
+'''    MoveSelection(mousePos);
+'''    RenderSpline();
+'''}
+'''
+'''function Canvas_OnMouseMove(event)
+'''{
+'''    if (g_selection != SelectedEnum.None)
+'''    {
+'''        var canvas = document.getElementById('splineCanvas');
+'''        var rect = canvas.getBoundingClientRect();
+'''
+'''        var mousePos = new Vec2( event.clientX - rect.left, event.clientY - rect.top );
+'''
+'''        MoveSelection(mousePos);
+'''        RenderSpline();
+'''    }
+'''}
+'''
+'''function Canvas_OnMouseUp(event)
+'''{
+'''    if (g_selection != SelectedEnum.None)
+'''    {
+'''        var canvas = document.getElementById('splineCanvas');
+'''        var rect = canvas.getBoundingClientRect();
+'''
+'''        var mousePos = new Vec2( event.clientX - rect.left, event.clientY - rect.top );
+'''
+'''        MoveSelection(mousePos);
+'''        RenderSpline();
+'''
+'''        g_selection = SelectedEnum.None;
+'''    }
+'''}
+'''
+'''Function ToggleCustomD1()
+'''{
+'''    var controls = document.getElementById("custom_d1_controls");
+'''    if (document.getElementById('use_custom_d1').checked)
+'''        controls.style.display = "block";
+'''    Else
+'''        controls.style.display = "none";
+'''
+'''    RenderSpline();
+'''}
+'''
+'''Function InitSpline()
+'''{
+'''    var canvas = document.getElementById('splineCanvas');
+'''    canvas.addEventListener('mousedown', Canvas_OnMouseDown, false);
+'''    canvas.addEventListener('mousemove', Canvas_OnMouseMove, false);
+'''    canvas.addEventListener('mouseup', Canvas_OnMouseUp, false);
+'''    canvas.addEventListener('mouseout', Canvas_OnMouseUp, false);
+'''}
+'''
+'''Function RenderSpline()
+'''{
+'''    // render style
+'''    var boundsWidth = 2;
+'''    var boundsColor = '#CCCCCC';
+'''
+'''    var arcWidth = 3;
+'''    var arcColor1 = '#FF0000';
+'''    var arcColor2 = '#0000FF';
+'''
+'''    var tangentWidth = 4;
+'''
+'''    var pointColor1 = '#AA0000';
+'''    var pointColor2 = '#0000AA';
+'''    var connectColor = '#AA00AA';
+'''
+'''    // get canvas
+'''    var canvas = document.getElementById('splineCanvas');
+'''    var context = canvas.getContext('2d');
+'''    var canvasWidth = canvas.width;
+'''    var canvasHeight = canvas.height;
+'''
+'''    // get inputs
+'''    var p1 = GetPoint1();
+'''    var p2 = GetPoint2();
+'''
+'''    var angle1 = c_Radians_Per_Degree * ToNumber_Safe(document.getElementById('tangent1').value);
+'''    var angle2 = c_Radians_Per_Degree * ToNumber_Safe(document.getElementById('tangent2').value);
+'''
+'''    var t1 = new Vec2( Math.cos(angle1), Math.sin(angle1) );
+'''    var t2 = new Vec2( Math.cos(angle2), Math.sin(angle2) );
+'''
+'''    var d1_min = ToNumber_Safe(document.getElementById('d1_min').value);
+'''    var d1_max = ToNumber_Safe(document.getElementById('d1_max').value);
+'''    var d1 = d1_min + (d1_max-d1_min)*ToNumber_Safe(document.getElementById('d1_frac').value)/100.0;
+'''
+'''    // clear
+'''    context.clearRect(0, 0, canvas.width, canvas.height);
+'''
+'''    // draw biarc
+'''    {
+'''        var v       = Vec2_Sub(p2, p1);
+'''        var vMagSqr = Vec2_MagSqr(v);
+'''
+'''        var vDotT1 = Vec2_Dot(v,t1);
+'''
+'''        // if we are using a custom value for d1
+'''        if (document.getElementById('use_custom_d1').checked)
+'''        {
+'''            var vDotT2 = Vec2_Dot(v,t2);
+'''            var t1DotT2 = Vec2_Dot(t1,t2);
+'''            var denominator = (vDotT2 - d1*(t1DotT2 - 1));
+'''
+'''            if (IsEqualEps(denominator,0.0))
+'''            {
+'''                document.getElementById('d1').value = d1;
+'''                document.getElementById('d2').value = 'Infinity';
+'''
+'''                // the second arc is a semicircle
+'''                var joint = Vec2_AddScaled(p1, t1, d1);
+'''                joint = Vec2_AddScaled(joint, t2, vDotT2 - d1*t1DotT2);
+'''
+'''                // draw bounds
+'''                DrawLine(context, p1, Vec2_AddScaled(p1, t1, d1), boundsWidth, boundsColor);
+'''                DrawLine(context, Vec2_AddScaled(p1, t1, d1), joint, boundsWidth, boundsColor);
+'''
+'''                // draw arcs
+'''                DrawArcFromEdge(context, p1, t1, joint, arcWidth, arcColor1, true);
+'''                DrawArcFromEdge(context, p2, t2, joint, arcWidth, arcColor2, false);
+'''            }
+'''            Else
+'''            {
+'''                var d2 = (0.5*vMagSqr - d1*vDotT1) / denominator;
+'''
+'''                var invLen = 1.0 / (d1 + d2);
+'''
+'''                var joint = Vec2_Scale( Vec2_Sub(t1,t2), d1*d2 );
+'''                joint = Vec2_AddScaled( joint, p2, d1 );
+'''                joint = Vec2_AddScaled( joint, p1, d2 );
+'''                joint = Vec2_Scale( joint, invLen );
+'''
+'''                document.getElementById('d1').value = d1;
+'''                document.getElementById('d2').value = d2;
+'''
+'''                // draw bounds
+'''                DrawLine(context, p1, Vec2_AddScaled(p1, t1, d1), boundsWidth, boundsColor);
+'''                DrawLine(context, Vec2_AddScaled(p1, t1, d1), joint, boundsWidth, boundsColor);
+'''                DrawLine(context, joint, Vec2_AddScaled(p2, t2, -d2), boundsWidth, boundsColor);
+'''                DrawLine(context, Vec2_AddScaled(p2, t2, -d2), p2, boundsWidth, boundsColor);
+'''
+'''                // draw arcs
+'''                DrawArcFromEdge(context, p1, t1, joint, arcWidth, arcColor1, true);
+'''                DrawArcFromEdge(context, p2, t2, joint, arcWidth, arcColor2, false);
+'''            }
+'''        }
+'''        // else set d1 equal to d2
+'''        Else
+'''        {
+'''            var t       = Vec2_Add(t1,t2);
+'''            var tMagSqr = Vec2_MagSqr(t);
+'''
+'''            var equalTangents = IsEqualEps(tMagSqr, 4.0);
+'''
+'''            var perpT1 = IsEqualEps(vDotT1, 0.0);
+'''            if (equalTangents && perpT1)
+'''            {
+'''                // we have two semicircles
+'''                joint = Vec2_AddScaled(p1, v, 0.5);
+'''
+'''                document.getElementById('d1').value = 'Infinity';
+'''                document.getElementById('d2').value = 'Infinity';
+'''
+'''                // draw arcs
+'''                var angle = Math.atan22(v.y,v.x);
+'''                var center1 = Vec2_AddScaled(p1, v, 0.25);
+'''                var center2 = Vec2_AddScaled(p1, v, 0.75);
+'''                var radius = Math.sqrt(vMagSqr)*0.25;
+'''                var cross = v.x*t1.y - v.y*t1.x;
+'''                DrawArc(context, center1, radius, angle, angle+Math.PI, arcWidth, arcColor1, cross < 0);
+'''                DrawArc(context, center2, radius, angle, angle+Math.PI, arcWidth, arcColor2, cross > 0);
+'''
+'''                context.globalAlpha = 0.05;
+'''                DrawCircle(context, center1, radius, arcColor1);
+'''                DrawCircle(context, center2, radius, arcColor2);
+'''                context.globalAlpha = 1.0;
+'''            }
+'''            Else
+'''            {
+'''                var vDotT   = Vec2_Dot(v,t);
+'''
+'''                var perpT1 = IsEqualEps(vDotT1, 0.0);
+'''
+'''                if (equalTangents)
+'''                {
+'''                    d1 = vMagSqr / (4*vDotT1);
+'''                }
+'''                Else
+'''                {
+'''                    var denominator = 2 - 2*Vec2_Dot(t1,t2);
+'''                    var discriminant = Sqr(vDotT) + denominator*vMagSqr;
+'''                    d1 = (Math.sqrt(discriminant) - vDotT) / denominator
+'''                }
+'''
+'''                var joint = Vec2_Scale( Vec2_Sub(t1,t2), d1 );
+'''                joint = Vec2_Add( joint, p1 );
+'''                joint = Vec2_Add( joint, p2 );
+'''                joint = Vec2_Scale( joint, 0.5 );
+'''
+'''                document.getElementById('d1').value = d1;
+'''                document.getElementById('d2').value = d1;
+'''
+'''                // draw bounds
+'''                DrawLine(context, p1, Vec2_AddScaled(p1, t1, d1), boundsWidth, boundsColor);
+'''                DrawLine(context, Vec2_AddScaled(p1, t1, d1), joint, boundsWidth, boundsColor);
+'''                DrawLine(context, joint, Vec2_AddScaled(p2, t2, -d1), boundsWidth, boundsColor);
+'''                DrawLine(context, Vec2_AddScaled(p2, t2, -d1), p2, boundsWidth, boundsColor);
+'''
+'''                // draw arcs
+'''                DrawArcFromEdge(context, p1, t1, joint, arcWidth, arcColor1, true);
+'''                DrawArcFromEdge(context, p2, t2, joint, arcWidth, arcColor2, false);
+'''            }
+'''        }
+'''    }
+'''
+'''    // draw points
+'''    DrawCircle(context, p1, c_Point_Radius, pointColor1);
+'''    DrawCircle(context, p2, c_Point_Radius, pointColor2);
+'''
+'''    // draw tangents
+'''    DrawLine(context, p1, Vec2_AddScaled(p1, t1, c_Tangent_Length), tangentWidth, pointColor1);
+'''    DrawLine(context, p2, Vec2_AddScaled(p2, t2, c_Tangent_Length), tangentWidth, pointColor2);
+'''
+'''}
+'''
+'''InitSpline();
+'''RenderSpline();
