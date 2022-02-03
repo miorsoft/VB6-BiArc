@@ -86,10 +86,10 @@ End Sub
 
 Private Sub Form_Activate()
 
-    BIARC.DRAW CC, vbYellow, 1, 3
+    BIARC.Draw CC, vbYellow, 1, 3
 
 
-    cPTS.DRAW CC
+    cPTS.Draw CC
     SRF.DrawToDC PicHDC
     DoEvents
     SRF.DrawToDC PicHDC
@@ -163,9 +163,9 @@ Private Sub PIC_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As
 
             BIARC.CALC
             With CC: .SetSourceColor 0: .Paint: End With
-            BIARC.DRAW CC, vbYellow, 1, 3, True, True
+            BIARC.Draw CC, vbYellow, 1, 3, True, True
 
-            cPTS.DRAW CC
+            cPTS.Draw CC
             SRF.DrawToDC PicHDC
             DoEvents
             '--------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -187,12 +187,12 @@ Private Sub Timer1_Timer()
     If T > 1 Then T = T - 1
     BIARC.CALC
     With CC: .SetSourceColor 0: .Paint: End With
-    BIARC.DRAW CC, vbYellow, 1, 3, True, True
+    BIARC.Draw CC, vbYellow, 1, 3, True, True
 
     CC.Arc P.x, P.Y, 8
     CC.Stroke
 
-    cPTS.DRAW CC
+    cPTS.Draw CC
     SRF.DrawToDC PicHDC
     DoEvents
 End Sub

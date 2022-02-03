@@ -56,12 +56,12 @@ Private Const arcColor1 As Long = vbGreen
 Private Const arcColor2 As Long = vbRed
 
 
-Private mPoint1        As tVec2
-Private mPoint2        As tVec2
-Private mTangP1        As tVec2                       ' Tangent Point
-Private mTangP2        As tVec2
-Private mTangDir1       As tVec2                       'Normalized tangent Direction
-Private mTangDir2       As tVec2
+Private mPoint1   As tVec2
+Private mPoint2   As tVec2
+Private mTangP1   As tVec2                       ' Tangent Point
+Private mTangP2   As tVec2
+Private mTangDir1 As tVec2                       'Normalized tangent Direction
+Private mTangDir2 As tVec2
 
 
 Private mCenter1  As tVec2
@@ -841,7 +841,7 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
 
 End Sub
 
-Public Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
+Public Sub Draw(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
 
 
     If Lines Then
@@ -872,7 +872,20 @@ Public Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Do
         .Stroke
     End With
 End Sub
-
+Public Sub DrawArcsReadyToFIllStroke(CC As cCairoContext)
+    With CC
+        If mClockWise1 Then
+            .Arc mCenter1.x, mCenter1.Y, mRadius1, mA11, mA12
+        Else
+            .ArcNegative mCenter1.x, mCenter1.Y, mRadius1, mA12, mA11
+        End If
+        If mClockWise2 Then
+            .Arc mCenter2.x, mCenter2.Y, mRadius2, mA21, mA22
+        Else
+            .ArcNegative mCenter2.x, mCenter2.Y, mRadius2, mA22, mA21
+        End If
+    End With
+End Sub
 Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
 ' Author miorsoft - reexre
     Dim Perc1#, Perc2#

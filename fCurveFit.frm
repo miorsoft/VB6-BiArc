@@ -116,7 +116,7 @@ Public Sub TEST()
 
         BI(I).SetPointsAndTangPts P1, T1, P2, T2
         BI(I).CALC
-        BI(I).DRAW CC2, vbYellow, 1, 3, True
+        BI(I).Draw CC2, vbYellow, 1, 3, True
 
         '        J = J + 1
         J = J - 1
@@ -176,9 +176,9 @@ Private Sub TEST2()
         Next
 
 
-If Rnd < 0.5 Then 'Close Path
-.AddPointAndTangDirection .Point(1), .TangDir(1)
-End If
+        If Rnd < 0.5 Then                        'Close Path
+            .ClosePath
+        End If
 
     End With
 
@@ -197,7 +197,12 @@ Private Sub Timer1_Timer()
     If T > 1 Then T = T - 1
 
     With CC2: .SetSourceColor 0: .Paint: End With
-    BiarcPath.DRAW CC2, vbYellow, 1, 3, True
+    BiarcPath.Draw CC2, vbYellow, 1, 3, True
+    If BiarcPath.Closed Then
+        CC2.SetSourceColor vbCyan, 0.33
+        BiarcPath.DrawOnlyCairoArcs CC2
+        CC2.Fill
+    End If
 
     CC2.SetSourceColor vbGreen, 0.5
     For I = 1 To BiarcPath.Npoints

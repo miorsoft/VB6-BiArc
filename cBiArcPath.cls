@@ -28,6 +28,9 @@ Private NBia      As Long
 
 Private mTotalLength As Double
 
+Private mClosed   As Boolean
+
+
 Friend Property Get Npoints() As Long
     Npoints = NP
 End Property
@@ -53,6 +56,22 @@ Friend Property Get TangDir(N As Long) As tVec2
         TangDir = BIARC(N).TangentDir1
     End If
 End Property
+Friend Property Get Closed() As Boolean
+    Closed = mClosed
+End Property
+Friend Sub ClosePath()
+    If mClosed = False Then
+        mClosed = True
+        AddPointAndTangDirection Point(1), TangDir(1)
+    End If
+End Sub
+Friend Sub OpenPath()
+    If mClosed = True Then
+        mClosed = False
+        NP = NP - 1
+        NBia = NBia - 1: ReDim Preserve BIARC(NBia)
+    End If
+End Sub
 Friend Sub AddPointAndTangPt(P As tVec2, TangTo As tVec2)
     NP = NP + 1
     If NP = 1 Then
@@ -120,13 +139,28 @@ Private Sub Class_Initialize()
     ReDim BIARC(0)
 End Sub
 
-Friend Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, _
+Friend Sub Draw(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, _
                 Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
     Dim I&
     For I = 1 To NBia
-        BIARC(I).DRAW CC, Color, Alpha, Width, Lines, FullCircles
+        BIARC(I).Draw CC, Color, Alpha, Width, Lines, FullCircles
     Next
+
 End Sub
+
+Friend Sub DrawOnlyCairoArcs(CC As cCairoContext)
+    Dim I&
+    'CC.MoveTo BIARC(1).Point1.x, BIARC(1).Point1.Y
+    For I = 1 To NBia: BIARC(I).DrawArcsReadyToFIllStroke CC: Next
+End Sub
+
+Friend Sub DrawFilled(CC As cCairoContext, Color As Long, Alpha As Double)
+    CC.SetSourceColor Color, Alpha
+    DrawOnlyCairoArcs CC
+    CC.Fill
+End Sub
+
+
 
 Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
     Dim currT     As Double
