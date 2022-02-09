@@ -26,11 +26,11 @@ Begin VB.Form fMain
    End
    Begin VB.CommandButton cCF 
       Caption         =   "Test BiarcPATH"
-      Height          =   495
+      Height          =   975
       Left            =   8040
       TabIndex        =   1
-      Top             =   6240
-      Width           =   975
+      Top             =   5760
+      Width           =   1095
    End
    Begin VB.PictureBox PIC 
       Appearance      =   0  'Flat
@@ -62,16 +62,16 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Private BIARC     As cBiARC
+Private BIARC As cBiARC
 
-Private T         As Double
+Private T As Double
 
-Private SRF       As cCairoSurface
-Private CC        As cCairoContext
-Private CP        As cControlPoint
-Private cPTS      As cControlPoints
+Private SRF As cCairoSurface
+Private CC As cCairoContext
+Private CP As cControlPoint
+Private cPTS As cControlPoints
 
-Private PicHDC    As Long
+Private PicHDC As Long
 
 Private Sub cCF_Click()
     chkInterpolate.value = vbUnchecked
@@ -86,10 +86,10 @@ End Sub
 
 Private Sub Form_Activate()
 
-    BIARC.Draw CC, vbYellow, 1, 3
+    BIARC.DRAW CC, vbYellow, 1, 3
 
 
-    cPTS.Draw CC
+    cPTS.DRAW CC
     SRF.DrawToDC PicHDC
     DoEvents
     SRF.DrawToDC PicHDC
@@ -112,17 +112,17 @@ Private Sub Form_Load()
 
     Set cPTS = New cControlPoints
 
-    BIARC.SetPointsAndTangPts Vec2(80, 120), Vec2(80 + 20, 120 + 40), _
-                              Vec2(300, 150), Vec2(300 + 20, 150 - 40)
+    BIARC.SetPointsAndControlPts Vec2(80, 120), Vec2(80 + 20, 120 + 40), _
+                                 Vec2(300, 150), Vec2(300 + 20, 150 - 40)
 
-    cPTS.Add "C1", BIARC.Point1.x, BIARC.Point1.Y, vbGreen, 14, 0.7
-    cPTS.Add "C2", BIARC.Point2.x, BIARC.Point2.Y, vbRed, 14, 0.7
-    cPTS.Add "T1", BIARC.PtTangentTo1.x, BIARC.PtTangentTo1.Y, vbGreen, 9, 0.7
-    cPTS.Add "T2", BIARC.PtTangentTo2.x, BIARC.PtTangentTo2.Y, vbRed, 9, 0.7
+    cPTS.Add "C1", BIARC.Point1.X, BIARC.Point1.Y, vbGreen, 14, 0.7
+    cPTS.Add "C2", BIARC.Point2.X, BIARC.Point2.Y, vbRed, 14, 0.7
+    cPTS.Add "T1", BIARC.ControlPt1.X, BIARC.ControlPt1.Y, vbGreen, 9, 0.7
+    cPTS.Add "T2", BIARC.ControlPt2.X, BIARC.ControlPt2.Y, vbRed, 9, 0.7
 
     BIARC.CALC
 
-    '    cCF_Click
+    cCF_Click
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -131,41 +131,41 @@ End Sub
 
 
 
-Private Sub PIC_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub PIC_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 '    Dim CP      As cControlPoint
-    Set CP = cPTS.CheckControlPointUnderCursor(x, Y)
+    Set CP = cPTS.CheckControlPointUnderCursor(X, Y)
     If Not CP Is Nothing Then
-        CP.SetMouseDownPoint x, Y:               ' BIARC.CalcAndDRAWBiARC P1, P2, NT1, NT2, 0    ': RENDERrc    ' RaiseEvent RefreshContents(CC)
+        CP.SetMouseDownPoint X, Y:    ' BIARC.CalcAndDRAWBiARC P1, P2, NT1, NT2, 0    ': RENDERrc    ' RaiseEvent RefreshContents(CC)
         BIARC.CALC
 
     End If
 
 End Sub
 
-Private Sub PIC_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub PIC_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
     Dim CP As cControlPoint, MOverStateChanged As Boolean
     If Button Then
-        Set CP = cPTS.CheckControlPointUnderCursor(x, Y, True, MOverStateChanged)
+        Set CP = cPTS.CheckControlPointUnderCursor(X, Y, True, MOverStateChanged)
         If Not CP Is Nothing Then
 
             Select Case CP.Key
             Case "C1"
-                BIARC.Point1 = Vec2(CP.x, CP.Y)
+                BIARC.Point1 = Vec2(CP.X, CP.Y)
             Case "C2"
-                BIARC.Point2 = Vec2(CP.x, CP.Y)
+                BIARC.Point2 = Vec2(CP.X, CP.Y)
             Case "T1"
-                BIARC.PtTangentTo1 = Vec2(CP.x, CP.Y)
+                BIARC.ControlPt1 = Vec2(CP.X, CP.Y)
             Case "T2"
-                BIARC.PtTangentTo2 = Vec2(CP.x, CP.Y)
+                BIARC.ControlPt2 = Vec2(CP.X, CP.Y)
             End Select
 
 
 
             BIARC.CALC
             With CC: .SetSourceColor 0: .Paint: End With
-            BIARC.Draw CC, vbYellow, 1, 3, True, True
+            BIARC.DRAW CC, vbYellow, 1, 3, True, True
 
-            cPTS.Draw CC
+            cPTS.DRAW CC
             SRF.DrawToDC PicHDC
             DoEvents
             '--------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -174,25 +174,25 @@ Private Sub PIC_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As
 
 End Sub
 
-Private Sub PIC_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub PIC_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
     cPTS.EnsureMouseUpState
 
 End Sub
 
 Private Sub Timer1_Timer()
-    Dim P         As tVec2
+    Dim P As tVec2
 
     P = BIARC.InterpolatedPointAt(T)
     T = T + 0.02007
     If T > 1 Then T = T - 1
     BIARC.CALC
     With CC: .SetSourceColor 0: .Paint: End With
-    BIARC.Draw CC, vbYellow, 1, 3, True, True
+    BIARC.DRAW CC, vbYellow, 1, 3, True, True
 
-    CC.Arc P.x, P.Y, 8
+    CC.Arc P.X, P.Y, 8
     CC.Stroke
 
-    cPTS.Draw CC
+    cPTS.DRAW CC
     SRF.DrawToDC PicHDC
     DoEvents
 End Sub

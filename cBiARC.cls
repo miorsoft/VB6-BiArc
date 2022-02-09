@@ -40,14 +40,14 @@ Option Explicit
 '******************************************************************************/
 
 ' USAGE:
-' -SetPointsAndTangPts
+' -SetPointsAndControlPts
 ' -CALC
 ' -DRAW
 
 '******************************************************************************/
 
 
-Private Const boundsWidth As Double = 1.25
+Private Const boundsWidth As Double = 1.2
 Private Const boundsColor As Long = vbGreen
 'Private Const tangentWidth As Double = 1
 'Private Const pointColor1 As Long = vbGreen
@@ -56,27 +56,25 @@ Private Const arcColor1 As Long = vbGreen
 Private Const arcColor2 As Long = vbRed
 
 
-Private mPoint1   As tVec2
-Private mPoint2   As tVec2
-Private mTangP1   As tVec2                       ' Tangent Point
-Private mTangP2   As tVec2
+Private mPoint1 As tVec2
+Private mPoint2 As tVec2
+Private mControlP1 As tVec2                     ' Tangent control Point
+Private mControlP2 As tVec2
 Private mTangDir1 As tVec2                       'Normalized tangent Direction
 Private mTangDir2 As tVec2
 
+Private mCenter1 As tVec2
+Private mCenter2 As tVec2
+Private mRadius1 As Double
+Private mRadius2 As Double
+Private mA11 As Double
+Private mA12 As Double
+Private mA21 As Double
+Private mA22 As Double
 
-Private mCenter1  As tVec2
-Private mCenter2  As tVec2
-Private mRadius1  As Double
-Private mRadius2  As Double
-Private mA11      As Double
-Private mA12      As Double
-Private mA21      As Double
-Private mA22      As Double
-
-Private d1        As Double
-Private d2        As Double
-Private Joint     As tVec2
-
+Private d1 As Double
+Private d2 As Double
+Private mJoint As tVec2
 
 Private mLengthArc1#
 Private mLengthArc2#
@@ -93,11 +91,11 @@ End Property
 Friend Property Let Point2(P As tVec2)
     mPoint2 = P
 End Property
-Friend Property Let PtTangentTo1(P As tVec2)
-    mTangP1 = P
+Friend Property Let ControlPt1(P As tVec2)
+    mControlP1 = P
 End Property
-Friend Property Let PtTangentTo2(P As tVec2)
-    mTangP2 = P
+Friend Property Let ControlPt2(P As tVec2)
+    mControlP2 = P
 End Property
 
 Friend Property Get Point1() As tVec2
@@ -106,11 +104,11 @@ End Property
 Friend Property Get Point2() As tVec2
     Point2 = mPoint2
 End Property
-Friend Property Get PtTangentTo1() As tVec2
-    PtTangentTo1 = mTangP1
+Friend Property Get ControlPt1() As tVec2
+    ControlPt1 = mControlP1
 End Property
-Friend Property Get PtTangentTo2() As tVec2
-    PtTangentTo2 = mTangP2
+Friend Property Get ControlPt2() As tVec2
+    ControlPt2 = mControlP2
 End Property
 Friend Property Get TangentDir1() As tVec2
     TangentDir1 = mTangDir1
@@ -146,6 +144,7 @@ Friend Property Get A22() As Double
 End Property
 
 
+
 Friend Property Get LengthArc1() As Double
     LengthArc1 = mLengthArc1
 End Property
@@ -157,14 +156,20 @@ Friend Property Get LengthTot() As Double
     LengthTot = mLengthTot
 End Property
 
+Friend Property Get ClockWise1() As Boolean
+    ClockWise1 = mClockWise1
+End Property
+Friend Property Get ClockWise2() As Boolean
+    ClockWise2 = mClockWise2
+End Property
 
 Private Sub CCDrawLine(CC As cCairoContext, mPoint1 As tVec2, mPoint2 As tVec2, Lwidth As Double, Color As Long)
     CC.DrawLine mPoint1.x, mPoint1.Y, mPoint2.x, mPoint2.Y, , Lwidth, Color
 End Sub
-'''Function DrawArcFromEdge(context, mPoint1, mTangP1, mPoint2, arcWidth, color, fromP1)
+'''Function DrawArcFromEdge(context, mPoint1, mControlP1, mPoint2, arcWidth, color, fromP1)
 '''{
-'''    var chord = SUB2(mPoint2, mPoint1);
-'''    var n1 = new Vec2(-mTangP1.y, mTangP1.x);
+'''    var chord = DIFF2(mPoint2, mPoint1);
+'''    var n1 = new Vec2(-mControlP1.y, mControlP1.x);
 '''    var chordDotN1 = DOT2(chord, n1);
 '''
 '''    if (IsEqualEps(chordDotN1,0))
@@ -177,12 +182,12 @@ End Sub
 '''        var radius = Vec2_MagSqr(chord) / (2*chordDotN1);
 '''        var center = Vec2_AddScaled(mPoint1, n1, radius);
 '''
-'''        var p1Offset = SUB2(mPoint1, center);
-'''        var p2Offset = SUB2(mPoint2, center);
+'''        var p1Offset = DIFF2(mPoint1, center);
+'''        var p2Offset = DIFF2(mPoint2, center);
 '''
 '''        var p1Ang1 = Math.atan2(p1Offset.y,p1Offset.x);
 '''        var p2Ang1 = Math.atan2(p2Offset.y,p2Offset.x);
-'''        if ( p1Offset.x*mTangP1.y - p1Offset.y*mTangP1.x > 0)
+'''        if ( p1Offset.x*mControlP1.y - p1Offset.y*mControlP1.x > 0)
 '''            DrawArc(context, center, Math.abs(radius), p1Ang1, p2Ang1, arcWidth, color, !fromP1);
 '''        Else
 '''            DrawArc(context, center, Math.abs(radius), p1Ang1, p2Ang1, arcWidth, color, fromP1);
@@ -192,7 +197,7 @@ End Sub
 '''        context.globalAlpha = 1.0;
 '''    }
 '''}
-''Private Sub DrawArcFromEdge(mPoint1 As tVec2, mTangP1 As tVec2, mPoint2 As tVec2, _
+''Private Sub DrawArcFromEdge(mPoint1 As tVec2, mControlP1 As tVec2, mPoint2 As tVec2, _
  ''                           arcWidth As Double, Color As Long, fromP1 As Boolean)
 ''    Dim chord     As tVec2
 ''    Dim N1        As tVec2
@@ -205,8 +210,8 @@ End Sub
 ''    Dim p2Ang1    As Double
 ''    Dim TA        As Double
 ''
-''    chord = SUB2(mPoint2, mPoint1)
-''    N1 = Vec2(-mTangP1.Y, mTangP1.x)
+''    chord = DIFF2(mPoint2, mPoint1)
+''    N1 = Vec2(-mControlP1.Y, mControlP1.x)
 ''    chordDotN1 = DOT2(chord, N1)
 ''
 ''    If (IsEqualEps(chordDotN1, 0)) Then
@@ -219,14 +224,14 @@ End Sub
 ''        Radius = LengthSq2(chord) / (2 * chordDotN1)
 ''        Center = ADDScaled2(mPoint1, N1, Radius)
 ''
-''        p1Offset = SUB2(mPoint1, Center)
-''        p2Offset = SUB2(mPoint2, Center)
+''        p1Offset = DIFF2(mPoint1, Center)
+''        p2Offset = DIFF2(mPoint2, Center)
 ''
 ''        p1Ang1 = Atan2(p1Offset.x, p1Offset.Y)
 ''        p2Ang1 = Atan2(p2Offset.x, p2Offset.Y)
 ''
 ''
-''        If (p1Offset.x * mTangP1.Y - p1Offset.Y * mTangP1.x > 0) Then
+''        If (p1Offset.x * mControlP1.Y - p1Offset.Y * mControlP1.x > 0) Then
 ''            '    DrawArc(context, center, Math.abs(radius), p1Ang1, p2Ang1, arcWidth, color, !fromP1);
 ''            '''''            With CC
 ''            '''''                .SetSourceColor cOLOR
@@ -287,7 +292,7 @@ End Sub
 ''    Dim t1DotT2   As Double
 ''    Dim denominator As Double
 ''
-''    Dim Joint     As tVec2
+''    Dim mJoint     As tVec2
 ''    Dim invlen    As Double
 ''
 ''    Dim t         As tVec2
@@ -312,7 +317,7 @@ End Sub
 ''    '    With CC: .SetSourceColor 0: .Paint: End With
 ''
 ''
-''    v = SUB2(mPoint2, mPoint1)
+''    v = DIFF2(mPoint2, mPoint1)
 ''    vMagSqr = LengthSq2(v)
 ''
 ''    vDotT1 = DOT2(v, mTangDir1)
@@ -333,16 +338,16 @@ End Sub
 ''            d2 = MAX_VALUE
 ''
 ''            '// the second arc is a semicircle
-''            Joint = ADDScaled2(mPoint1, mTangDir1, d1)
-''            Joint = ADDScaled2(Joint, mTangDir2, vDotT2 - d1 * t1DotT2)
+''            mJoint = ADDScaled2(mPoint1, mTangDir1, d1)
+''            mJoint = ADDScaled2(mJoint, mTangDir2, vDotT2 - d1 * t1DotT2)
 ''
 ''            '// draw bounds
 ''            CCDrawLine mPoint1, ADDScaled2(mPoint1, mTangDir1, d1), boundsWidth, boundsColor
-''            CCDrawLine ADDScaled2(mPoint1, mTangDir1, d1), Joint, boundsWidth, boundsColor
+''            CCDrawLine ADDScaled2(mPoint1, mTangDir1, d1), mJoint, boundsWidth, boundsColor
 ''
 ''            '// draw arcs
-''            DrawArcFromEdge mPoint1, mTangDir1, Joint, arcWidth, arcColor1, True
-''            DrawArcFromEdge mPoint2, mTangDir2, Joint, arcWidth, arcColor2, False
+''            DrawArcFromEdge mPoint1, mTangDir1, mJoint, arcWidth, arcColor1, True
+''            DrawArcFromEdge mPoint2, mTangDir2, mJoint, arcWidth, arcColor2, False
 ''
 ''        Else
 ''
@@ -350,23 +355,23 @@ End Sub
 ''
 ''            invlen = 1# / (d1 + d2)
 ''
-''            Joint = MUL2(SUB2(mTangDir1, mTangDir2), d1 * d2)
-''            Joint = ADDScaled2(Joint, mPoint2, d1)
-''            Joint = ADDScaled2(Joint, mPoint1, d2)
-''            Joint = MUL2(Joint, invlen)
+''            mJoint = MUL2(DIFF2(mTangDir1, mTangDir2), d1 * d2)
+''            mJoint = ADDScaled2(mJoint, mPoint2, d1)
+''            mJoint = ADDScaled2(mJoint, mPoint1, d2)
+''            mJoint = MUL2(mJoint, invlen)
 ''
 ''            'document.getElementById('d1').value = d1;
 ''            'document.getElementById('d2').value = d2;
 ''
 ''            '// draw bounds
 ''            CCDrawLine mPoint1, ADDScaled2(mPoint1, mTangDir1, d1), boundsWidth, boundsColor
-''            CCDrawLine ADDScaled2(mPoint1, mTangDir1, d1), Joint, boundsWidth, boundsColor
-''            CCDrawLine Joint, ADDScaled2(mPoint2, mTangDir2, -d2), boundsWidth, boundsColor
+''            CCDrawLine ADDScaled2(mPoint1, mTangDir1, d1), mJoint, boundsWidth, boundsColor
+''            CCDrawLine mJoint, ADDScaled2(mPoint2, mTangDir2, -d2), boundsWidth, boundsColor
 ''            CCDrawLine ADDScaled2(mPoint2, mTangDir2, -d2), mPoint2, boundsWidth, boundsColor
 ''
 ''            '// draw arcs
-''            DrawArcFromEdge mPoint1, mTangDir1, Joint, arcWidth * 2, arcColor1, True
-''            DrawArcFromEdge mPoint2, mTangDir2, Joint, arcWidth, arcColor2, False
+''            DrawArcFromEdge mPoint1, mTangDir1, mJoint, arcWidth * 2, arcColor1, True
+''            DrawArcFromEdge mPoint2, mTangDir2, mJoint, arcWidth, arcColor2, False
 ''        End If
 ''
 ''        '// else set d1 equal to d2
@@ -381,7 +386,7 @@ End Sub
 ''        perpT1 = IsEqualEps(vDotT1, 0#)
 ''        If (equalTangents And perpT1) Then
 ''            '// we have two semicircles
-''            Joint = ADDScaled2(mPoint1, v, 0.5)
+''            mJoint = ADDScaled2(mPoint1, v, 0.5)
 ''
 ''            '                document.getElementById('d1').value = 'Infinity';
 ''            '                document.getElementById('d2').value = 'Infinity';
@@ -424,23 +429,23 @@ End Sub
 ''                d1 = (Sqr(discriminant) - vDotT) / denominator
 ''            End If
 ''
-''            Joint = MUL2(SUB2(mTangDir1, mTangDir2), d1)
-''            Joint = Vec2ADD(Joint, mPoint1)
-''            Joint = Vec2ADD(Joint, mPoint2)
-''            Joint = MUL2(Joint, 0.5)
+''            mJoint = MUL2(DIFF2(mTangDir1, mTangDir2), d1)
+''            mJoint = Vec2ADD(mJoint, mPoint1)
+''            mJoint = Vec2ADD(mJoint, mPoint2)
+''            mJoint = MUL2(mJoint, 0.5)
 ''
 ''            'document.getElementById('d1').value = d1;
 ''            'document.getElementById('d2').value = d1;
 ''
 ''            '// draw bounds
 ''            CCDrawLine mPoint1, ADDScaled2(mPoint1, mTangDir1, d1), boundsWidth, boundsColor
-''            CCDrawLine ADDScaled2(mPoint1, mTangDir1, d1), Joint, boundsWidth, boundsColor
-''            CCDrawLine Joint, ADDScaled2(mPoint2, mTangDir2, -d1), boundsWidth, boundsColor
+''            CCDrawLine ADDScaled2(mPoint1, mTangDir1, d1), mJoint, boundsWidth, boundsColor
+''            CCDrawLine mJoint, ADDScaled2(mPoint2, mTangDir2, -d1), boundsWidth, boundsColor
 ''            CCDrawLine ADDScaled2(mPoint2, mTangDir2, -d1), mPoint2, boundsWidth, boundsColor
 ''
 ''            '// draw arcs
-''            DrawArcFromEdge mPoint1, mTangDir1, Joint, arcWidth, arcColor1, True
-''            DrawArcFromEdge mPoint2, mTangDir2, Joint, arcWidth, arcColor2, False
+''            DrawArcFromEdge mPoint1, mTangDir1, mJoint, arcWidth, arcColor1, True
+''            DrawArcFromEdge mPoint2, mTangDir2, mJoint, arcWidth, arcColor2, False
 ''        End If
 ''    End If
 ''
@@ -463,14 +468,14 @@ End Sub
 ''    '''''        .Arc mPoint1.x, mPoint1.Y, 5
 ''    '''''        .Fill
 ''    '''''        .MoveTo mPoint1.x, mPoint1.Y
-''    '''''        .LineTo mTangP1.x, mTangP1.Y
+''    '''''        .LineTo mControlP1.x, mControlP1.Y
 ''    '''''        .Stroke
 ''    '''''
 ''    '''''        .SetSourceColor arcColor2
 ''    '''''        .Arc mPoint2.x, mPoint2.Y, 5
 ''    '''''        .Fill
 ''    '''''        .MoveTo mPoint2.x, mPoint2.Y
-''    '''''        .LineTo mTangP2.x, mTangP2.Y
+''    '''''        .LineTo mControlP2.x, mControlP2.Y
 ''    '''''        .Stroke
 ''    '''''    End With
 ''
@@ -480,20 +485,20 @@ End Sub
 ''
 ''End Sub
 
-Friend Sub SetPointsAndTangPts(Point1 As tVec2, PtTang1 As tVec2, _
-                               Point2 As tVec2, PtTang2 As tVec2)
+Friend Sub SetPointsAndControlPts(Point1 As tVec2, Cntrl1 As tVec2, _
+                                  Point2 As tVec2, Cntrl2 As tVec2)
     mPoint1 = Point1
     mPoint2 = Point2
-    mTangP1 = PtTang1
-    mTangP2 = PtTang2
+    mControlP1 = Cntrl1
+    mControlP2 = Cntrl2
     CALC
 End Sub
 Friend Sub SetPointsAndTangDirs(Point1 As tVec2, TangDir1 As tVec2, _
                                 Point2 As tVec2, TangDir2 As tVec2)
     mPoint1 = Point1
     mPoint2 = Point2
-    mTangP1 = SUM2(Point1, TangDir1)
-    mTangP2 = SUM2(Point2, TangDir2)
+    mControlP1 = SUM2(Point1, TangDir1)
+    mControlP2 = SUM2(Point2, TangDir2)
     CALC
 End Sub
 
@@ -523,7 +528,7 @@ End Sub
 '    Dim t1DotT2   As Double
 '    Dim denominator As Double
 '
-'    Dim Joint     As tVec2
+'    Dim mJoint     As tVec2
 '    Dim invlen    As Double
 '
 '    Dim t         As tVec2
@@ -551,7 +556,7 @@ End Sub
 '    '    End With
 '
 '
-'    v = SUB2(mPoint2, mPoint1)
+'    v = DIFF2(mPoint2, mPoint1)
 '    vMagSqr = LengthSq2(v)
 '
 '    vDotT1 = DOT2(v, mTangDir1)
@@ -568,8 +573,8 @@ End Sub
 '            d1 = CustomDistance
 '            d2 = MAX_VALUE
 '            '// the second arc is a semicircle
-'            Joint = ADDScaled2(mPoint1, mTangDir1, d1)
-'            Joint = ADDScaled2(Joint, mTangDir2, vDotT2 - d1 * t1DotT2)
+'            mJoint = ADDScaled2(mPoint1, mTangDir1, d1)
+'            mJoint = ADDScaled2(mJoint, mTangDir2, vDotT2 - d1 * t1DotT2)
 '
 '        Else
 '
@@ -577,10 +582,10 @@ End Sub
 '
 '            invlen = 1# / (d1 + d2)
 '
-'            Joint = MUL2(SUB2(mTangDir1, mTangDir2), d1 * d2)
-'            Joint = ADDScaled2(Joint, mPoint2, d1)
-'            Joint = ADDScaled2(Joint, mPoint1, d2)
-'            Joint = MUL2(Joint, invlen)
+'            mJoint = MUL2(DIFF2(mTangDir1, mTangDir2), d1 * d2)
+'            mJoint = ADDScaled2(mJoint, mPoint2, d1)
+'            mJoint = ADDScaled2(mJoint, mPoint1, d2)
+'            mJoint = MUL2(mJoint, invlen)
 '
 '        End If
 '
@@ -596,7 +601,7 @@ End Sub
 '        perpT1 = IsEqualEps(vDotT1, 0#)
 '        If (equalTangents And perpT1) Then
 '            '// we have two semicircles
-'            Joint = ADDScaled2(mPoint1, v, 0.5)
+'            mJoint = ADDScaled2(mPoint1, v, 0.5)
 '
 '            d1 = MAX_VALUE
 '            d2 = MAX_VALUE
@@ -633,10 +638,10 @@ End Sub
 '                d1 = (Sqr(discriminant) - vDotT) / denominator
 '            End If
 '
-'            Joint = MUL2(SUB2(mTangDir1, mTangDir2), d1)
-'            Joint = Vec2ADD(Joint, mPoint1)
-'            Joint = Vec2ADD(Joint, mPoint2)
-'            Joint = MUL2(Joint, 0.5)
+'            mJoint = MUL2(DIFF2(mTangDir1, mTangDir2), d1)
+'            mJoint = Vec2ADD(mJoint, mPoint1)
+'            mJoint = Vec2ADD(mJoint, mPoint2)
+'            mJoint = MUL2(mJoint, 0.5)
 '
 '
 '        End If
@@ -646,8 +651,8 @@ End Sub
 '    '**********************************************************************
 '    '**********************************************************************
 '    '**********************************************************************
-'    ArcFromEdge mPoint1, mTangDir1, Joint, True, OutCenter1, OutRadius1, OutAng11, OutAng12
-'    ArcFromEdge mPoint2, mTangDir2, Joint, False, OutCenter2, OutRadius2, OutAng21, OutAng22
+'    ArcFromEdge mPoint1, mTangDir1, mJoint, True, OutCenter1, OutRadius1, OutAng11, OutAng12
+'    ArcFromEdge mPoint2, mTangDir2, mJoint, False, OutCenter2, OutRadius2, OutAng21, OutAng22
 '
 '    '****************************************************************
 '    '****************************************************************
@@ -656,58 +661,59 @@ End Sub
 '
 'End Sub
 
-Private Sub ArcFromEdge(mPoint1 As tVec2, tangentDir As tVec2, p2Joint As tVec2, fromP1 As Boolean, _
-                        ByRef Center As tVec2, _
-                        ByRef Radius As Double, _
-                        ByRef Ang1 As Double, _
-                        ByRef Ang2 As Double)
+Private Sub ArcFromEdge(Point As tVec2, tangentDir As tVec2, pJoint As tVec2, fromP1 As Boolean, _
+                        ByRef outCenter As tVec2, _
+                        ByRef outRadius As Double, _
+                        ByRef outAng1 As Double, _
+                        ByRef outAng2 As Double)
 
-    Dim chord     As tVec2
+    Dim chord As tVec2
     Dim NtangentDir As tVec2
     Dim chordDotN1 As Double
-    Dim p1Offset  As tVec2
-    Dim p2Offset  As tVec2
-    Dim P1ANG     As Double
-    Dim P2ANG     As Double
+    Dim StartPoint As tVec2
+    Dim EndPoint As tVec2
+    Dim P1ANG As Double
+    Dim P2ANG As Double
 
-    chord = SUB2(p2Joint, mPoint1)
+    chord = DIFF2(pJoint, Point)
     NtangentDir = Vec2(-tangentDir.Y, tangentDir.x)
     chordDotN1 = DOT2(chord, NtangentDir)
 
     If (IsEqualEps(chordDotN1, 0)) Then
+        Stop
         '// straight line
-        '     CCDrawLine mPoint1, p2Joint, arcWidth, color
+        ''        CCDrawLine CC, Point, pJoint, 5, Color
     Else
 
-        Radius = LengthSq2(chord) / (2 * chordDotN1)
-        Center = ADDScaled2(mPoint1, NtangentDir, Radius)
+        outRadius = LengthSq2(chord) / (2 * chordDotN1)
+        outCenter = ADDScaled2(Point, NtangentDir, outRadius)
 
-        p1Offset = SUB2(mPoint1, Center)
-        p2Offset = SUB2(p2Joint, Center)
+        StartPoint = DIFF2(Point, outCenter)
+        EndPoint = DIFF2(pJoint, outCenter)
 
-        P1ANG = Atan2(p1Offset.x, p1Offset.Y)
-        P2ANG = Atan2(p2Offset.x, p2Offset.Y)
+        P1ANG = Atan2(StartPoint.x, StartPoint.Y)
+        P2ANG = Atan2(EndPoint.x, EndPoint.Y)
 
-        If (p1Offset.x * tangentDir.Y - p1Offset.Y * tangentDir.x > 0) Then
+        If (StartPoint.x * tangentDir.Y - StartPoint.Y * tangentDir.x) > 0 Then
             If (fromP1) Then
-                Ang1 = P1ANG
-                Ang2 = P2ANG
+                outAng1 = P1ANG
+                outAng2 = P2ANG
             Else
-                Ang1 = P2ANG
-                Ang2 = P1ANG
+                outAng1 = P2ANG
+                outAng2 = P1ANG
             End If
         Else
             If Not (fromP1) Then
-                Ang1 = P1ANG
-                Ang2 = P2ANG
+                outAng1 = P1ANG
+                outAng2 = P2ANG
             Else
-                Ang1 = P2ANG
-                Ang2 = P1ANG
+                outAng1 = P2ANG
+                outAng2 = P1ANG
             End If
         End If
     End If
 
-    Radius = Abs(Radius)
+    outRadius = Abs(outRadius)
 
 End Sub
 
@@ -717,37 +723,37 @@ End Sub
 Public Sub CALC(Optional CustomDistance As Double = 0)
 
 
-    Dim V         As tVec2
-    Dim vMagSqr   As Double
-    Dim vDotT1    As Double
+    Dim V As tVec2
+    Dim vMagSqr As Double
+    Dim vDotT1 As Double
 
-    Dim vDotT2    As Double
-    Dim T1DotT2   As Double
+    Dim vDotT2 As Double
+    Dim T1DotT2 As Double
     Dim denominator As Double
 
-    Dim invlen    As Double
+    Dim invlen As Double
 
-    Dim T         As tVec2
-    Dim tMagSqr   As Double
+    Dim T As tVec2
+    Dim tMagSqr As Double
     Dim equalTangents As Boolean
-    Dim perpT1    As Boolean
+    Dim perpT1 As Boolean
 
-    Dim vDotT     As Double
+    Dim vDotT As Double
 
     Dim discriminant As Double
 
-    Dim angle     As Double
-    Dim Center1   As tVec2
-    Dim Center2   As tVec2
-    Dim Radius    As Double
-    Dim cross     As Double
+    Dim angle As Double
+    Dim Center1 As tVec2
+    Dim Center2 As tVec2
+    Dim Radius As Double
+    Dim cross As Double
 
-    mTangDir1 = Normalize2(SUB2(mTangP1, mPoint1))
-    mTangDir2 = Normalize2(SUB2(mTangP2, mPoint2))
+    mTangDir1 = Normalize2(DIFF2(mControlP1, mPoint1))
+    mTangDir2 = Normalize2(DIFF2(mControlP2, mPoint2))
 
     d1 = CustomDistance
 
-    V = SUB2(mPoint2, mPoint1)
+    V = DIFF2(mPoint2, mPoint1)
     vMagSqr = LengthSq2(V)
 
     vDotT1 = DOT2(V, mTangDir1)
@@ -763,8 +769,8 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
             d1 = CustomDistance
             d2 = MAX_VALUE
             '// the second arc is a semicircle
-            Joint = ADDScaled2(mPoint1, mTangDir1, d1)
-            Joint = ADDScaled2(Joint, mTangDir2, vDotT2 - d1 * T1DotT2)
+            mJoint = ADDScaled2(mPoint1, mTangDir1, d1)
+            mJoint = ADDScaled2(mJoint, mTangDir2, vDotT2 - d1 * T1DotT2)
 
         Else
 
@@ -772,10 +778,10 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
 
             invlen = 1# / (d1 + d2)
 
-            Joint = MUL2(SUB2(mTangDir1, mTangDir2), d1 * d2)
-            Joint = ADDScaled2(Joint, mPoint2, d1)
-            Joint = ADDScaled2(Joint, mPoint1, d2)
-            Joint = MUL2(Joint, invlen)
+            mJoint = MUL2(DIFF2(mTangDir1, mTangDir2), d1 * d2)
+            mJoint = ADDScaled2(mJoint, mPoint2, d1)
+            mJoint = ADDScaled2(mJoint, mPoint1, d2)
+            mJoint = MUL2(mJoint, invlen)
 
         End If
 
@@ -790,8 +796,9 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
 
         perpT1 = IsEqualEps(vDotT1, 0#)
         If (equalTangents And perpT1) Then
+            Stop
             '// we have two semicircles
-            Joint = ADDScaled2(mPoint1, V, 0.5)
+            mJoint = ADDScaled2(mPoint1, V, 0.5)
             d1 = MAX_VALUE
             d2 = MAX_VALUE
             angle = Atan2(V.x, V.Y)
@@ -806,23 +813,22 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
             If (equalTangents) Then
                 d1 = vMagSqr / (4 * vDotT1)
             Else
-
                 denominator = 2 - 2 * DOT2(mTangDir1, mTangDir2)
                 discriminant = vDotT * vDotT + denominator * vMagSqr
                 d1 = (Sqr(discriminant) - vDotT) / denominator
             End If
 
-            Joint = MUL2(SUB2(mTangDir1, mTangDir2), d1)
-            Joint = Vec2ADD(Joint, mPoint1)
-            Joint = Vec2ADD(Joint, mPoint2)
-            Joint = MUL2(Joint, 0.5)
+            mJoint = MUL2(DIFF2(mTangDir1, mTangDir2), d1)
+            mJoint = Vec2ADD(mJoint, mPoint1)
+            mJoint = Vec2ADD(mJoint, mPoint2)
+            mJoint = MUL2(mJoint, 0.5)
 
         End If
     End If
 
     '****************************************************************
-    ArcFromEdge mPoint1, mTangDir1, Joint, True, mCenter1, mRadius1, mA11, mA12
-    ArcFromEdge mPoint2, mTangDir2, Joint, False, mCenter2, mRadius2, mA21, mA22
+    ArcFromEdge mPoint1, mTangDir1, mJoint, True, mCenter1, mRadius1, mA11, mA12
+    ArcFromEdge mPoint2, mTangDir2, mJoint, False, mCenter2, mRadius2, mA21, mA22
     '****************************************************************
 
 
@@ -836,19 +842,19 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
     mLengthArc2 = mRadius2 * Abs(AngArc2)
     mLengthTot = mLengthArc1 + mLengthArc2
 
-    mClockWise1 = DOT2(Vec2(-mTangDir1.Y, mTangDir1.x), SUB2(Joint, SUM2(mPoint1, mTangDir1))) > 0
-    mClockWise2 = DOT2(Vec2(-mTangDir2.Y, mTangDir2.x), SUB2(Joint, SUM2(mPoint2, mTangDir2))) > 0
+    mClockWise1 = DOT2(Vec2(-mTangDir1.Y, mTangDir1.x), DIFF2(mJoint, SUM2(mPoint1, mTangDir1))) > 0
+    mClockWise2 = DOT2(Vec2(-mTangDir2.Y, mTangDir2.x), DIFF2(mJoint, SUM2(mPoint2, mTangDir2))) > 0
 
 End Sub
 
-Public Sub Draw(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
+Public Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
 
 
     If Lines Then
         '// draw bounds
         CCDrawLine CC, mPoint1, ADDScaled2(mPoint1, mTangDir1, d1), boundsWidth, boundsColor
-        CCDrawLine CC, ADDScaled2(mPoint1, mTangDir1, d1), Joint, boundsWidth, boundsColor
-        CCDrawLine CC, Joint, ADDScaled2(mPoint2, mTangDir2, -d1), boundsWidth, boundsColor
+        CCDrawLine CC, ADDScaled2(mPoint1, mTangDir1, d1), mJoint, boundsWidth, boundsColor
+        CCDrawLine CC, mJoint, ADDScaled2(mPoint2, mTangDir2, -d1), boundsWidth, boundsColor
         CCDrawLine CC, ADDScaled2(mPoint2, mTangDir2, -d1), mPoint2, boundsWidth, boundsColor
     End If
     If FullCircles Then
@@ -872,7 +878,7 @@ Public Sub Draw(CC As cCairoContext, Color As Long, Alpha As Double, Width As Do
         .Stroke
     End With
 End Sub
-Public Sub DrawArcsReadyToFIllStroke(CC As cCairoContext)
+Public Sub DrawArcsReadyToFillStroke(CC As cCairoContext)
     With CC
         If mClockWise1 Then
             .Arc mCenter1.x, mCenter1.Y, mRadius1, mA11, mA12
@@ -890,8 +896,8 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
 ' Author miorsoft - reexre
     Dim Perc1#, Perc2#
 
-    Dim Out       As tVec2
-    Dim DOT       As Double
+    Dim Out As tVec2
+    Dim DOT As Double
 
     Perc1 = mLengthArc1 / mLengthTot
     Perc2 = mLengthArc2 / mLengthTot
@@ -904,7 +910,7 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
             Out.Y = mCenter1.Y + Sin(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
         End If
     Else                                         ' Second arc
-        T = T - Perc1
+        T = T - Perc1    '<---
         If mClockWise2 Then
             Out.x = mCenter2.x + Cos(mA22 - AngArc2 * (1 - T / Perc2)) * mRadius2
             Out.Y = mCenter2.Y + Sin(mA22 - AngArc2 * (1 - T / Perc2)) * mRadius2
@@ -918,3 +924,28 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
 
 End Function
 
+Friend Function CircleDistance(CircleCenter As tVec2, Rad As Double, retArc1or2 As Long) As Double
+    Dim D As Double
+    Dim A As Double
+    Dim B As Boolean
+
+    A = Atan2(CircleCenter.x - mCenter1.x, CircleCenter.Y - mCenter1.Y)
+    If IsAngBetween(A, mA11, mA12) Then
+        '        CC.SetSourceColor vbRed
+        '        CC.Arc mCenter1.X, mCenter1.Y, mRadius1: CC.Stroke
+        CircleDistance = Length2(DIFF2(Center1, CircleCenter)) - mRadius1 - Rad
+        If Not (mClockWise1) Then CircleDistance = -CircleDistance - Rad * 2
+        '            If CircleDistance < 0 Then Stop
+        retArc1or2 = 1
+    Else
+        A = Atan2(CircleCenter.x - mCenter2.x, CircleCenter.Y - mCenter2.Y)
+        If IsAngBetween(A, mA21, mA22) Then
+            '        CC.SetSourceColor vbRed
+            '        CC.Arc mCenter2.X, mCenter2.Y, mRadius2: CC.Stroke
+            CircleDistance = Length2(DIFF2(Center2, CircleCenter)) - mRadius2 - Rad
+            If Not (mClockWise2) Then CircleDistance = -CircleDistance - Rad * 2
+            '        If CircleDistance < 0 Then Stop
+            retArc1or2 = 2
+        End If
+    End If
+End Function

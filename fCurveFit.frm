@@ -10,6 +10,15 @@ Begin VB.Form fCurveFit
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   629
    StartUpPosition =   3  'Windows Default
+   Begin VB.CommandButton cmdShapes 
+      Caption         =   "Shapes"
+      Height          =   975
+      Left            =   8040
+      TabIndex        =   2
+      ToolTipText     =   "Click to see test Shapes"
+      Top             =   2760
+      Width           =   1215
+   End
    Begin VB.Timer Timer1 
       Enabled         =   0   'False
       Interval        =   40
@@ -46,17 +55,20 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Dim BI()          As cBiARC
-Dim NB            As Long
-Dim P()           As tVec2
-Dim NP            As Long
+Dim BI() As cBiARC
+Dim NB As Long
+Dim P() As tVec2
+Dim NP As Long
 
-Dim SRF2          As cCairoSurface
-Dim CC2           As cCairoContext
+Dim SRF2 As cCairoSurface
+Dim CC2 As cCairoContext
 
-Dim BiarcPath     As cBiArcPath
+Dim BiarcPath As cBiArcPath
 
-Dim T             As Double
+Dim T As Double
+
+Dim TS As Long
+
 
 Private Sub Form_Activate()
     TEST2
@@ -66,21 +78,21 @@ Public Sub TEST()
 
 
     Dim I&, J&
-    Dim C1        As tVec2
-    Dim C2        As tVec2
+    Dim C1 As tVec2
+    Dim C2 As tVec2
     Dim R1#, R2#
     Dim A11#, A12#, A21#, A22#
 
     NP = 6                                       ' min 4 - and Multpile of 2
 
-    Dim P1        As tVec2
-    Dim P2        As tVec2
-    Dim T1        As tVec2
-    Dim T2        As tVec2
+    Dim P1 As tVec2
+    Dim P2 As tVec2
+    Dim T1 As tVec2
+    Dim T2 As tVec2
 
     ReDim P(NP)
     For I = 1 To NP
-        P(I).x = 50 + Rnd * 300
+        P(I).X = 50 + Rnd * 300
         P(I).Y = 50 + Rnd * 300
     Next
 
@@ -107,16 +119,16 @@ Public Sub TEST()
         '            J = J + 2
         '        End If
         '        P2 = P(J): J = J - 1
-        '        T2 = SUM2(P2, SUB2(P2, P(J)))
+        '        T2 = SUM2(P2, DIFF2(P2, P(J)))
 
         P1 = P(J): J = J + 1
         T1 = P(J): J = J + 1
         P2 = P(J): J = J + 1
         T2 = P(J)
 
-        BI(I).SetPointsAndTangPts P1, T1, P2, T2
+        BI(I).SetPointsAndControlPts P1, T1, P2, T2
         BI(I).CALC
-        BI(I).Draw CC2, vbYellow, 1, 3, True
+        BI(I).DRAW CC2, vbYellow, 1, 3, True
 
         '        J = J + 1
         J = J - 1
@@ -126,9 +138,9 @@ Public Sub TEST()
 
     For I = 1 To NP
         If I Mod 2 = 0 Then CC2.SetSourceColor vbRed Else: CC2.SetSourceColor vbYellow
-        CC2.Arc P(I).x, P(I).Y, 8
+        CC2.Arc P(I).X, P(I).Y, 8
         CC2.Fill
-        CC2.TextOut P(I).x - 4, P(I).Y - 7, CStr(I)
+        CC2.TextOut P(I).X - 4, P(I).Y - 7, CStr(I)
     Next
 
 
@@ -161,9 +173,9 @@ Private Sub TEST2()
     Set BiarcPath = New cBiArcPath
 
     With BiarcPath
-        '        .AddPointAndTangPt Vec2(50, 50), Vec2(70, 70)
-        '        .AddPointAndTangPt Vec2(85, 80), Vec2(115, 85)
-        '        .AddPointAndTangPt Vec2(290, 180), Vec2(150, 185)
+        '        .AddPointAndControlPoint Vec2(50, 50), Vec2(70, 70)
+        '        .AddPointAndControlPoint Vec2(85, 80), Vec2(115, 85)
+        '        .AddPointAndControlPoint Vec2(290, 180), Vec2(150, 185)
         '        .SetPointTangArrive 2, Vec2(0, 1), True
         '        .SetPointTangArrive 3, Vec2(10, 0), True
         '        .SetPointTangStart 2, Vec2(2, 0), True
@@ -174,7 +186,6 @@ Private Sub TEST2()
         For I = 1 To 3 + Rnd * 1
             .AddPointAndTangDirection Vec2(100 + Rnd * 300, 100 + Rnd * 300), Vec2(Rnd * 2 - 1, Rnd * 2 - 1)
         Next
-
 
         If Rnd < 0.5 Then                        'Close Path
             .ClosePath
@@ -190,14 +201,14 @@ Private Sub TEST2()
 End Sub
 
 Private Sub Timer1_Timer()
-    Dim P         As tVec2
-    Dim I         As Long
+    Dim P As tVec2
+    Dim I As Long
 
     T = T + 0.01251
     If T > 1 Then T = T - 1
 
     With CC2: .SetSourceColor 0: .Paint: End With
-    BiarcPath.Draw CC2, vbYellow, 1, 3, True
+    BiarcPath.DRAW CC2, vbYellow, 1, 3    ', True
     If BiarcPath.Closed Then
         CC2.SetSourceColor vbCyan, 0.33
         BiarcPath.DrawOnlyCairoArcs CC2
@@ -207,16 +218,83 @@ Private Sub Timer1_Timer()
     CC2.SetSourceColor vbGreen, 0.5
     For I = 1 To BiarcPath.Npoints
         P = BiarcPath.Point(I)
-        CC2.Arc P.x, P.Y, 8
+        CC2.Arc P.X, P.Y, 8
         CC2.Fill
-        CC2.TextOut P.x - 4, P.Y - 7, CStr(I)
+        CC2.TextOut P.X - 4, P.Y - 7, CStr(I)
     Next
 
     CC2.SetSourceColor vbWhite
     P = BiarcPath.InterpolatedPointAt(T)
-    CC2.Arc P.x, P.Y, 7.5
+    CC2.Arc P.X, P.Y, 7.5
     CC2.Fill
 
     SRF2.DrawToDC PIC.hDC
     DoEvents
 End Sub
+
+
+
+Private Sub cmdShapes_Click()
+    Dim X#, Y#
+    Dim oX#, oY#
+    Dim C As Long
+    Dim I As Long
+    Dim NewTang As tVec2
+    Dim Delta1 As tVec2
+    Dim Delta2 As tVec2
+    Dim A#, R#
+
+
+
+    TS = 2    '<<<<<<<<<<<< force TS to 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    BiarcPath.Destroy
+
+    Select Case TS
+    Case 0
+        With BiarcPath
+            .AddPointAndTangDirection Vec2(250, 50), Vec2(0, 1)
+            .AddPointAndTangDirection Vec2(160, 225), Vec2(0, 1)
+            .AddPointAndTangDirection Vec2(250, 400), Vec2(0, 1)
+            .AddPointAndTangDirection Vec2(340, 225), Vec2(0, -1)
+            .ClosePath
+            .SetPointTangStart 3, Vec2(0, -1), True
+            .SetPointTangArrive 5, Vec2(0, -1), True
+        End With
+    Case 1
+        With BiarcPath
+            .AddPointAndTangDirection Vec2(250, 50), Vec2(-1, 0)
+            .AddPointAndTangDirection Vec2(150, 200), Vec2(1, 1)
+            .AddPointAndTangDirection Vec2(250, 420), Vec2(0, 1)
+            .AddPointAndTangDirection Vec2(350, 200), Vec2(1, -1)
+            .ClosePath
+            .SetPointTangStart 3, Vec2(0, -1), True
+        End With
+    Case 2                                       ' Serie of Points Interpolation
+        With BiarcPath
+            C = 1
+            '            For X = 5 To 500 Step 30
+            '               Y = 250 + Cos(X * 0.18) * 80 - Rnd * 150
+            '                If C Mod 2 = 0 Then
+            '                    .AddPointAndControlPoint Vec2(oX, oY), Vec2(X, Y)
+            '                End If
+            '                oX = X
+            '                oY = Y
+
+            For A = 0 To PI2 Step 0.4
+                R = (150 + (Rnd * 2 - 1) * 70)
+                X = 250 + Cos(A) * R
+                Y = 220 + Sin(A) * R
+                .AddPointAndTangDirection Vec2(X, Y), Vec2(1, 0)
+                C = C + 1
+            Next
+
+            .ClosePath
+            .AutoSetTangents
+
+        End With
+    End Select
+    TS = (TS + 1) Mod 3
+
+
+End Sub
+

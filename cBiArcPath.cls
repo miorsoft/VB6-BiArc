@@ -20,15 +20,15 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private FirstPoint As tVec2
-Private FirstPointTang As tVec2
+Private FirstControlPoint As tVec2
 
-Private NP        As Long
-Private BIARC()   As cBiARC
-Private NBia      As Long
+Private NP As Long
+Private BIARC() As cBiARC
+Private NBia As Long
 
 Private mTotalLength As Double
 
-Private mClosed   As Boolean
+Private mClosed As Boolean
 
 
 Friend Property Get Npoints() As Long
@@ -47,6 +47,11 @@ Friend Property Get Point(N As Long) As tVec2
         Point = BIARC(N).Point1
     End If
 End Property
+Friend Sub SetPoint(N As Long, Pos As tVec2, Optional autoTangent As Boolean = False)
+    If N < NP Then BIARC(N).Point1 = Pos
+    If N > 1 Then BIARC(N - 1).Point2 = Pos
+    If autoTangent Then AutoSetTangents
+End Sub
 Friend Property Get TangDir(N As Long) As tVec2
     If N < 1 Then Exit Property
     If N > NP Then Exit Property
@@ -72,23 +77,23 @@ Friend Sub OpenPath()
         NBia = NBia - 1: ReDim Preserve BIARC(NBia)
     End If
 End Sub
-Friend Sub AddPointAndTangPt(P As tVec2, TangTo As tVec2)
+Friend Sub AddPointAndControlPoint(P As tVec2, ControlP As tVec2)
     NP = NP + 1
     If NP = 1 Then
         FirstPoint = P
-        FirstPointTang = TangTo
+        FirstControlPoint = ControlP
     End If
     NBia = NP - 1
     If NBia > UBound(BIARC) Then
         ReDim Preserve BIARC(NBia)
         Set BIARC(NBia) = New cBiARC
         If NP = 2 Then
-            BIARC(NBia).SetPointsAndTangPts FirstPoint, FirstPointTang, _
-                                            P, TangTo
+            BIARC(NBia).SetPointsAndControlPts FirstPoint, FirstControlPoint, _
+                                               P, ControlP
 
         Else
-            BIARC(NBia).SetPointsAndTangPts BIARC(NBia - 1).Point2, BIARC(NBia - 1).PtTangentTo2, _
-                                            P, TangTo
+            BIARC(NBia).SetPointsAndControlPts BIARC(NBia - 1).Point2, BIARC(NBia - 1).ControlPt2, _
+                                               P, ControlP
         End If
     End If
 
@@ -96,15 +101,15 @@ Friend Sub AddPointAndTangPt(P As tVec2, TangTo As tVec2)
 
 End Sub
 Friend Sub AddPointAndTangDirection(P As tVec2, TangDir As tVec2)
-    AddPointAndTangPt P, SUM2(P, TangDir)
+    AddPointAndControlPoint P, SUM2(P, TangDir)
 End Sub
 
 Friend Sub SetPointTangStart(PointN As Long, TangentStart As tVec2, Optional IsDirection As Boolean = False)
-    If PointN > NP Then Exit Sub
+    If PointN > NP - 1 Then Exit Sub    'Last point hasn't TangStart
     If IsDirection Then
-        BIARC(PointN).PtTangentTo1 = SUM2(BIARC(PointN).Point1, TangentStart)
+        BIARC(PointN).ControlPt1 = SUM2(BIARC(PointN).Point1, TangentStart)
     Else
-        BIARC(PointN).PtTangentTo1 = TangentStart
+        BIARC(PointN).ControlPt1 = TangentStart
     End If
     BIARC(PointN).CALC
     pvUpdatePathLength
@@ -114,9 +119,9 @@ Friend Sub SetPointTangArrive(PointN As Long, TangentArrive As tVec2, Optional I
     If PointN > NP Then Exit Sub
 
     If IsDirection Then
-        BIARC(PointN - 1).PtTangentTo2 = SUM2(BIARC(PointN - 1).Point2, TangentArrive)
+        BIARC(PointN - 1).ControlPt2 = SUM2(BIARC(PointN - 1).Point2, TangentArrive)
     Else
-        BIARC(PointN - 1).PtTangentTo2 = TangentArrive
+        BIARC(PointN - 1).ControlPt2 = TangentArrive
     End If
     BIARC(PointN - 1).CALC
     pvUpdatePathLength
@@ -139,11 +144,11 @@ Private Sub Class_Initialize()
     ReDim BIARC(0)
 End Sub
 
-Friend Sub Draw(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, _
+Friend Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, _
                 Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
     Dim I&
     For I = 1 To NBia
-        BIARC(I).Draw CC, Color, Alpha, Width, Lines, FullCircles
+        BIARC(I).DRAW CC, Color, Alpha, Width, Lines, FullCircles
     Next
 
 End Sub
@@ -151,7 +156,7 @@ End Sub
 Friend Sub DrawOnlyCairoArcs(CC As cCairoContext)
     Dim I&
     'CC.MoveTo BIARC(1).Point1.x, BIARC(1).Point1.Y
-    For I = 1 To NBia: BIARC(I).DrawArcsReadyToFIllStroke CC: Next
+    For I = 1 To NBia: BIARC(I).DrawArcsReadyToFillStroke CC: Next
 End Sub
 
 Friend Sub DrawFilled(CC As cCairoContext, Color As Long, Alpha As Double)
@@ -163,8 +168,9 @@ End Sub
 
 
 Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
-    Dim currT     As Double
+    Dim currT As Double
     Dim I&, J&
+    If NP < 2 Then Exit Function
     '--- FIND which Biarc "T" belong to.   (I)
     T = T * mTotalLength
     I = 0
@@ -179,5 +185,81 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
     T = T / BIARC(I).LengthTot
 
     InterpolatedPointAt = BIARC(I).InterpolatedPointAt(T)
+
+End Function
+
+Friend Sub Destroy()
+    NP = 0
+    NBia = 0
+    ReDim BIARC(0)
+    mClosed = False
+End Sub
+
+Friend Sub AutoSetTangents()
+    Dim I As Long
+    Dim Delta1 As tVec2, Delta2 As tVec2
+    Dim NewTang As tVec2
+
+    For I = 2 To NP - 1
+        Delta1 = DIFF2(Point(I + 1), Point(I))
+        Delta2 = DIFF2(Point(I), Point(I - 1))
+'        NewTang = SUM2(Normalize2(Delta1), Normalize2(Delta2))
+        NewTang = Normalize2(SUM2(Delta1, Delta2))
+
+        SetPointTangent I, NewTang, True
+    Next
+    If mClosed Then
+        SetPointTangent NP, DIFF2(Point(2), Point(NP - 1)), True
+        SetPointTangent 1, TangDir(NP), True
+    Else
+        SetPointTangent NP, DIFF2(Point(NP), Point(NP - 1)), True
+        SetPointTangent 1, DIFF2(Point(2), Point(1)), True
+    End If
+
+End Sub
+
+
+
+Friend Function CircleCollisionAndResponse(CenterC As tVec2, Vel As tVec2, ByVal Rad As Double, Optional Restitution As Double = 0.97) As tVec2
+    Dim I         As Long
+    Dim D         As Double
+    Dim Circle1or2 As Long
+    Dim rr        As Double
+    Dim A         As Double
+    Dim TANG      As tVec2
+    Dim nTang     As tVec2
+    Dim Vperp     As tVec2
+    Dim vAxe      As tVec2
+    For I = 1 To NBia
+        With BIARC(I)
+            D = .CircleDistance(CenterC, Rad, Circle1or2)
+            If D < 0 Then
+                '--- Displace
+                If Circle1or2 = 1 Then           'Circle1
+                    A = Atan2(CenterC.X - .Center1.X, CenterC.Y - .Center1.Y)
+                    If .ClockWise1 Then rr = .Radius1 + Rad Else: rr = .Radius1 - Rad
+                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
+                    CenterC = SUM2(.Center1, TANG)
+                Else                             'Circle2
+                    A = Atan2(CenterC.X - .Center2.X, CenterC.Y - .Center2.Y)
+                    If .ClockWise2 Then rr = .Radius2 + Rad Else: rr = .Radius2 - Rad
+                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
+                    CenterC = SUM2(.Center2, TANG)
+                End If
+                '---- Update VEL (bounce)
+                vAxe = VectorProject(Vel, TANG)
+                Vperp = DIFF2(Vel, vAxe)
+                Vel = SUM2(Vperp, MUL2(vAxe, -Restitution))
+                '-----------
+                If Circle1or2 = 1 And Not (.ClockWise1) Then TANG = MUL2(TANG, -1)
+                If Circle1or2 = 2 And Not (.ClockWise2) Then TANG = MUL2(TANG, -1)
+
+                TANG = Normalize2(TANG)
+                CircleCollisionAndResponse = Vec2(-TANG.Y, TANG.X)
+                Exit For
+            End If
+
+        End With
+    Next
 
 End Function
