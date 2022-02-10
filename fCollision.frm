@@ -186,15 +186,12 @@ Private Sub Timer1_Timer()
     
     
     '----------------- BALL
-    
-    BallPos = SUM2(BallPos, BallVel)
-    BallVel.Y = BallVel.Y + 0.8 ' Gravity
     BallVel = MUL2(BallVel, 0.99)
-    
-    BiarcPath.CircleCollisionAndResponse BallPos, BallVel, BallRadius, , LeftSide
-    
-    
-    
+    BallVel.Y = BallVel.Y + 0.8 ' Gravity
+    BallPos = SUM2(BallPos, BallVel)
+
+    BiarcPath.CircleCollisionAndResponse BallPos, BallVel, BallRadius, 0.95, LeftSide
+           
     
     '-------------------------
     

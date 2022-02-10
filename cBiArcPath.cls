@@ -237,22 +237,30 @@ Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, 
             If D < 0 Then
 
                 If LeftSide Then tRAD = CircleRadius Else: tRAD = -CircleRadius
-                '--- Displace
+                '                '--- Displace OLD
+                '                If outCircle1or2 = 1 Then        'Circle1
+                '                    A = Atan2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
+                '                    If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD
+                '                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
+                '                    CircleCenter = SUM2(.Center1, TANG)
+                '                Else                             'Circle2
+                '                    A = Atan2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
+                '                    If .ClockWise2 Then rr = .Radius2 + tRAD Else: rr = .Radius2 - tRAD
+                '                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
+                '                    CircleCenter = SUM2(.Center2, TANG)
+                '                End If
+                '--- Displace NEW (without Sin Cos)
                 If outCircle1or2 = 1 Then        'Circle1
-                    A = Atan2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
+                    TANG = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
                     If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD
-                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
+                    TANG = MUL2(Normalize2(TANG), rr)
                     CircleCenter = SUM2(.Center1, TANG)
                 Else                             'Circle2
-                    A = Atan2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
+                    TANG = Vec2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
                     If .ClockWise2 Then rr = .Radius2 + tRAD Else: rr = .Radius2 - tRAD
-                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
+                    TANG = MUL2(Normalize2(TANG), rr)
                     CircleCenter = SUM2(.Center2, TANG)
                 End If
-
-
-                'If Not (LeftSide) Then TANG = MUL2(TANG, -1)
-
                 '---- Update VEL (bounce)
                 vAxe = VectorProject(Vel, TANG)
                 Vperp = DIFF2(Vel, vAxe)

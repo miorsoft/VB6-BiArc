@@ -368,8 +368,6 @@ Public Function IsAngBetween(ByVal MiddleA#, ByVal StartA#, ByVal EndA#) As Bool
     If EndA < 0 Then EndA = EndA + PI2
     If MiddleA < 0 Then MiddleA = MiddleA + PI2
 
-    'If StartA > EndA Then T = StartA: EndA = T: StartA = T
-
     MiddleA = MiddleA - StartA
     EndA = EndA - StartA
     If MiddleA < 0 Then MiddleA = MiddleA + PI2

@@ -925,37 +925,64 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
 
 End Function
 
+'Friend Function CircleDistanceOLD(CircleCenter As tVec2, CircleRadius As Double, retArc1or2 As Long, Optional LeftSide As Boolean = True) As Double
+'    Dim D         As Double
+'    Dim A         As Double
+'    Dim B         As Boolean
+'
+'        A = Atan2(CircleCenter.X - mCenter1.X, CircleCenter.Y - mCenter1.Y)
+'        If IsAngBetween(A, mA11, mA12) Then
+'            '        CC.SetSourceColor vbRed
+'            '        CC.Arc mCenter1.X, mCenter1.Y, mRadius1: CC.Stroke
+'            CircleDistanceOLD = Length2(DIFF2(Center1, CircleCenter)) - mRadius1    '- CircleRadius
+'            If LeftSide Then
+'                CircleDistanceOLD = CircleDistanceOLD - CircleRadius
+'            Else
+'                CircleDistanceOLD = -CircleDistanceOLD - CircleRadius
+'            End If
+'            If Not (mClockWise1) Then CircleDistanceOLD = -CircleDistanceOLD - CircleRadius * 2
+'            'If CircleDistanceOLD < 0 Then Stop
+'            retArc1or2 = 1
+'        Else
+'            A = Atan2(CircleCenter.X - mCenter2.X, CircleCenter.Y - mCenter2.Y)
+'            If IsAngBetween(A, mA21, mA22) Then
+'                '        CC.SetSourceColor vbRed
+'                '        CC.Arc mCenter2.X, mCenter2.Y, mRadius2: CC.Stroke
+'                CircleDistanceOLD = Length2(DIFF2(Center2, CircleCenter)) - mRadius2    '- CircleRadius
+'                If LeftSide Then
+'                    CircleDistanceOLD = CircleDistanceOLD - CircleRadius
+'                Else
+'                    CircleDistanceOLD = -CircleDistanceOLD - CircleRadius
+'                End If
+'                If Not (mClockWise2) Then CircleDistanceOLD = -CircleDistanceOLD - CircleRadius * 2
+'                'If CircleDistanceOLD < 0 Then Stop
+'                retArc1or2 = 2
+'            End If
+'        End If
+'End Function
 Friend Function CircleDistance(CircleCenter As tVec2, CircleRadius As Double, retArc1or2 As Long, Optional LeftSide As Boolean = True) As Double
-    Dim D         As Double
+    Dim D         As Double                      '---- Clearer Function
     Dim A         As Double
     Dim B         As Boolean
-
+    Dim DistFromArc As Double
     A = Atan2(CircleCenter.X - mCenter1.X, CircleCenter.Y - mCenter1.Y)
     If IsAngBetween(A, mA11, mA12) Then
         '        CC.SetSourceColor vbRed
         '        CC.Arc mCenter1.X, mCenter1.Y, mRadius1: CC.Stroke
-        CircleDistance = Length2(DIFF2(Center1, CircleCenter)) - mRadius1    '- CircleRadius
-        If LeftSide Then
-            CircleDistance = CircleDistance - CircleRadius
-        Else
-            CircleDistance = -CircleDistance - CircleRadius
-        End If
-        If Not (mClockWise1) Then CircleDistance = -CircleDistance - CircleRadius * 2
-        'If CircleDistance < 0 Then Stop
+        DistFromArc = Length2(DIFF2(Center1, CircleCenter)) - mRadius1
+        If Not (LeftSide) Then DistFromArc = -DistFromArc
+        If Not (ClockWise1) Then DistFromArc = -DistFromArc
+        CircleDistance = DistFromArc - CircleRadius
         retArc1or2 = 1
     Else
         A = Atan2(CircleCenter.X - mCenter2.X, CircleCenter.Y - mCenter2.Y)
         If IsAngBetween(A, mA21, mA22) Then
             '        CC.SetSourceColor vbRed
             '        CC.Arc mCenter2.X, mCenter2.Y, mRadius2: CC.Stroke
-            CircleDistance = Length2(DIFF2(Center2, CircleCenter)) - mRadius2    '- CircleRadius
-            If LeftSide Then
-                CircleDistance = CircleDistance - CircleRadius
-            Else
-                CircleDistance = -CircleDistance - CircleRadius
-            End If
-            If Not (mClockWise2) Then CircleDistance = -CircleDistance - CircleRadius * 2
-            'If CircleDistance < 0 Then Stop
+            DistFromArc = Length2(DIFF2(Center2, CircleCenter)) - mRadius2
+            If Not (LeftSide) Then DistFromArc = -DistFromArc
+            If Not (ClockWise2) Then DistFromArc = -DistFromArc
+            CircleDistance = DistFromArc - CircleRadius
             retArc1or2 = 2
         End If
     End If
