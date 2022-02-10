@@ -4,81 +4,81 @@ Option Explicit
 '************************* V E C T O R S & MATHS  ************************
 '*************************************************************************
 Public Type tVec2
-    x As Double
-    Y As Double
+    X             As Double
+    Y             As Double
 End Type
 
 Public Type tMAT2
-    m00 As Double
-    m01 As Double
-    m10 As Double
-    m11 As Double
+    m00           As Double
+    m01           As Double
+    m10           As Double
+    m11           As Double
 End Type
 
 
-Public Const PI As Double = 3.14159265358979
-Public Const PI2 As Double = 6.28318530717959
-Public Const PIh As Double = 1.5707963267949
+Public Const PI   As Double = 3.14159265358979
+Public Const PI2  As Double = 6.28318530717959
+Public Const PIh  As Double = 1.5707963267949
 
 Public Const EPSILON As Double = 0.00001
 Public Const EPSILON_SQ As Double = EPSILON * EPSILON
 
 Public Const MAX_VALUE As Double = 1E+32
 
-Public Function Vec2(x As Double, Y As Double) As tVec2
-    Vec2.x = x
+Public Function Vec2(X As Double, Y As Double) As tVec2
+    Vec2.X = X
     Vec2.Y = Y
 End Function
 
 Public Function Vec2Negative(V As tVec2) As tVec2
-    Vec2Negative.x = -V.x
+    Vec2Negative.X = -V.X
     Vec2Negative.Y = -V.Y
 End Function
 
 
 
 Public Function Vec2ADD(V1 As tVec2, V2 As tVec2) As tVec2
-    Vec2ADD.x = V1.x + V2.x
+    Vec2ADD.X = V1.X + V2.X
     Vec2ADD.Y = V1.Y + V2.Y
 End Function
 Public Function SUM2(V1 As tVec2, V2 As tVec2) As tVec2
-    SUM2.x = V1.x + V2.x
+    SUM2.X = V1.X + V2.X
     SUM2.Y = V1.Y + V2.Y
 End Function
 Public Function DIFF2(V1 As tVec2, V2 As tVec2) As tVec2
-    DIFF2.x = V1.x - V2.x
+    DIFF2.X = V1.X - V2.X
     DIFF2.Y = V1.Y - V2.Y
 End Function
 
 Public Function Vec2MULV(V1 As tVec2, V2 As tVec2) As tVec2
-    Vec2MULV.x = V1.x * V2.x
+    Vec2MULV.X = V1.X * V2.X
     Vec2MULV.Y = V1.Y * V2.Y
 End Function
 Public Function MUL2(V As tVec2, S As Double) As tVec2
-    MUL2.x = V.x * S
+    MUL2.X = V.X * S
     MUL2.Y = V.Y * S
 End Function
 
 Public Function ADDScaled2(V1 As tVec2, V2 As tVec2, S As Double) As tVec2
-    ADDScaled2.x = V1.x + V2.x * S
+    ADDScaled2.X = V1.X + V2.X * S
     ADDScaled2.Y = V1.Y + V2.Y * S
 End Function
 
 Public Function LengthSq2(V As tVec2) As Double
-    LengthSq2 = V.x * V.x + V.Y * V.Y
+    LengthSq2 = V.X * V.X + V.Y * V.Y
 End Function
 
 Public Function Length2(V As tVec2) As Double
-    Length2 = Sqr(V.x * V.x + V.Y * V.Y)
+    Length2 = Sqr(V.X * V.X + V.Y * V.Y)
 
 End Function
 Public Function Vec2Magnitude(V As tVec2) As Double
-    Vec2Magnitude = Sqr(V.x * V.x + V.Y * V.Y)
+    Vec2Magnitude = Sqr(V.X * V.X + V.Y * V.Y)
 End Function
 
 Public Function SIDE(P As tVec2, L1 As tVec2, L2 As tVec2) As Double
 'https://stackoverflow.com/questions/1560492/how-to-tell-whether-a-point-is-to-the-right-or-left-side-of-a-line
-SIDE = Sgn((L2.x - L1.x) * (P.Y - L1.Y) - (L2.Y - L1.Y) * (P.x - L1.x))
+    SIDE = Sgn((L2.X - L1.X) * (P.Y - L1.Y) - (L2.Y - L1.Y) * (P.X - L1.X))
 End Function
 
 Public Function Vec2Rotate(V As tVec2, radians As Double) As tVec2
@@ -88,21 +88,21 @@ Public Function Vec2Rotate(V As tVec2, radians As Double) As tVec2
 'real xp = x * c - y * s;
 'real yp = x * s + y * c;
 
-    Dim S As Double
-    Dim C As Double
+    Dim S         As Double
+    Dim C         As Double
     C = Cos(radians)
     S = Sin(radians)
 
-    Vec2Rotate.x = V.x * C - V.Y * S
-    Vec2Rotate.Y = V.x * S + V.Y * C
+    Vec2Rotate.X = V.X * C - V.Y * S
+    Vec2Rotate.Y = V.X * S + V.Y * C
 End Function
 
 Public Function Normalize2(V As tVec2) As tVec2
-    Dim D As Double
+    Dim D         As Double
     D = Length2(V)
     If D Then
         D = 1# / D
-        Normalize2.x = V.x * D
+        Normalize2.X = V.X * D
         Normalize2.Y = V.Y * D
     End If
 
@@ -120,7 +120,7 @@ End Function
 
 Public Function Vec_IsNormalized_Eps(value As tVec2) As Boolean
 
-    Dim sqrMag As Double
+    Dim sqrMag    As Double
     sqrMag = DOT2(value, value)
 
 
@@ -132,40 +132,40 @@ End Function
 
 
 Public Function Vec2MIN(A As tVec2, B As tVec2) As tVec2
-    Vec2MIN.x = IIf(A.x < B.x, A.x, B.x)
+    Vec2MIN.X = IIf(A.X < B.X, A.X, B.X)
     Vec2MIN.Y = IIf(A.Y < B.Y, A.Y, B.Y)
 End Function
 
 Public Function Vec2MAX(A As tVec2, B As tVec2) As tVec2
-    Vec2MAX.x = IIf(A.x > B.x, A.x, B.x)
+    Vec2MAX.X = IIf(A.X > B.X, A.X, B.X)
     Vec2MAX.Y = IIf(A.Y > B.Y, A.Y, B.Y)
 End Function
 '  return a.x * b.x + a.y * b.y;
 Public Function DOT2(A As tVec2, B As tVec2) As Double
-    DOT2 = A.x * B.x + A.Y * B.Y
+    DOT2 = A.X * B.X + A.Y * B.Y
 End Function
 'inline Vec2 Cross( const Vec2& v, real a )
 '{
 '  return Vec2( a * v.y, -a * v.x );
 '}
 Public Function Vec2CROSSva(V As tVec2, A As Double) As tVec2
-    Vec2CROSSva.x = A * V.Y
-    Vec2CROSSva.Y = -A * V.x
+    Vec2CROSSva.X = A * V.Y
+    Vec2CROSSva.Y = -A * V.X
 End Function
 'inline Vec2 Cross( real a, const Vec2& v )
 '{
 '  return Vec2( -a * v.y, a * v.x );
 '}
 Public Function Vec2CROSSav(A As Double, V As tVec2) As tVec2
-    Vec2CROSSav.x = -A * V.Y
-    Vec2CROSSav.Y = A * V.x
+    Vec2CROSSav.X = -A * V.Y
+    Vec2CROSSav.Y = A * V.X
 End Function
 'inline real Cross( const Vec2& a, const Vec2& b )
 '{
 '  return a.x * b.y - a.y * b.x;
 '}
 Public Function Vec2CROSS(A As tVec2, B As tVec2) As Double
-    Vec2CROSS = A.x * B.Y - A.Y * B.x
+    Vec2CROSS = A.X * B.Y - A.Y * B.X
 End Function
 
 Public Function Vec2CROSS2(A As tVec2, B As tVec2) As tVec2
@@ -178,8 +178,8 @@ Public Function Vec2CROSS2(A As tVec2, B As tVec2) As tVec2
 '    Vec2CROSS2.Y = A.X * B.Y - A.Y * B.X
 
 
-    Vec2CROSS2.x = -(B.Y - A.Y)
-    Vec2CROSS2.Y = (B.x - A.x)
+    Vec2CROSS2.X = -(B.Y - A.Y)
+    Vec2CROSS2.Y = (B.X - A.X)
 
 
     ''''    Vec2CROSS2.X = A.Y * B.z - A.z * B.Y
@@ -195,9 +195,9 @@ End Function
 
 
 Public Function Vec2DISTANCEsq(A As tVec2, B As tVec2) As Double
-    Dim Dx As Double
-    Dim Dy As Double
-    Dx = A.x - B.x
+    Dim Dx        As Double
+    Dim Dy        As Double
+    Dx = A.X - B.X
     Dy = A.Y - B.Y
     Vec2DISTANCEsq = Dx * Dx + Dy * Dy
 End Function
@@ -220,8 +220,8 @@ Public Function matMULv(M As tMAT2, V As tVec2) As tVec2
 
 'return Vec2( m00 * rhs.x + m01 * rhs.y, m10 * rhs.x + m11 * rhs.y );
     With M
-        matMULv.x = .m00 * V.x + .m01 * V.Y
-        matMULv.Y = .m10 * V.x + .m11 * V.Y
+        matMULv.X = .m00 * V.X + .m01 * V.Y
+        matMULv.Y = .m10 * V.X + .m11 * V.Y
     End With
 
 End Function
@@ -233,8 +233,8 @@ Public Function SetOrient(radians As Double) As tMAT2
 '    m00 = c; m01 = -s;
 '    m10 = s; m11 =  c;
 
-    Dim C As Double
-    Dim S As Double
+    Dim C         As Double
+    Dim S         As Double
 
     C = Cos(radians)
     S = Sin(radians)
@@ -251,27 +251,27 @@ End Function
 
 Public Function VectorProject(ByRef V As tVec2, ByRef Vto As tVec2) As tVec2
 'Poject Vector V to vector Vto
-    Dim K As Double
-    Dim D As Double
+    Dim K         As Double
+    Dim D         As Double
 
-    D = Vto.x * Vto.x + Vto.Y * Vto.Y
+    D = Vto.X * Vto.X + Vto.Y * Vto.Y
     If D = 0 Then Exit Function
 
     D = 1 / Sqr(D)
 
-    K = (V.x * Vto.x + V.Y * Vto.Y) * D
+    K = (V.X * Vto.X + V.Y * Vto.Y) * D
 
-    VectorProject.x = (Vto.x * D) * K
+    VectorProject.X = (Vto.X * D) * K
     VectorProject.Y = (Vto.Y * D) * K
 
 End Function
 Public Function VectorProjectN(ByRef V As tVec2, ByRef VtoN As tVec2) As tVec2
 'Poject Vector V to vector VtoN
-    Dim K As Double
+    Dim K         As Double
 
-    K = (V.x * VtoN.x + V.Y * VtoN.Y)
+    K = (V.X * VtoN.X + V.Y * VtoN.Y)
 
-    VectorProjectN.x = VtoN.x * K
+    VectorProjectN.X = VtoN.X * K
     VectorProjectN.Y = VtoN.Y * K
 
 End Function
@@ -283,38 +283,38 @@ Public Function VectorReflect(ByRef V As tVec2, ByRef wall As tVec2) As tVec2
 'Vector "Wall" represent the angle of a wall where the point Bounces.
 'Returns the vector velocity that the point takes after the rebound
 
-    Dim vDot As Double
-    Dim D As Double
-    Dim NwX As Double
-    Dim NwY As Double
+    Dim vDot      As Double
+    Dim D         As Double
+    Dim NwX       As Double
+    Dim NwY       As Double
 
-    D = (wall.x * wall.x + wall.Y * wall.Y)
+    D = (wall.X * wall.X + wall.Y * wall.Y)
     If D = 0 Then Exit Function
 
     D = 1 / Sqr(D)
 
-    NwX = wall.x * D
+    NwX = wall.X * D
     NwY = wall.Y * D
     '    'Vect2 = Vect1 - 2 * WallN * (WallN DOT Vect1)
     'vDot = N.DotV(V)
-    vDot = V.x * NwX + V.Y * NwY
+    vDot = V.X * NwX + V.Y * NwY
 
     NwX = NwX * vDot * 2
     NwY = NwY * vDot * 2
 
-    VectorReflect.x = -V.x + NwX
+    VectorReflect.X = -V.X + NwX
     VectorReflect.Y = -V.Y + NwY
 
 
 End Function
 
 
-Public Function ACos(x As Double) As Double
+Public Function ACos(X As Double) As Double
 '    ACOS = Atn(-x / Sqr(-x * x + 1)) + 2 * Atn(1)
-    ACos = Atn(-x / Sqr(-x * x + 1#)) + 2# * PIh
+    ACos = Atn(-X / Sqr(-X * X + 1#)) + 2# * PIh
 End Function
-Public Function ASin(ByVal x As Double) As Double
-    ASin = Atn(x / Sqr(-x * x + 1))
+Public Function ASin(ByVal X As Double) As Double
+    ASin = Atn(X / Sqr(-X * X + 1))
 End Function
 
 Public Function AngleDIFF(ByVal A1 As Double, ByVal A2 As Double) As Double
@@ -333,9 +333,9 @@ Public Function IsEqualEps(ByVal A As Double, ByVal B As Double) As Boolean
     IsEqualEps = (Abs(A - B) < EPSILON)
 End Function
 
-Public Function Atan2(ByVal x As Double, ByVal Y As Double) As Double
-    If x Then                                    '''Sempre USATA
-        Atan2 = -PI + Atn(Y / x) - (x > 0!) * PI
+Public Function Atan2(ByVal X As Double, ByVal Y As Double) As Double
+    If X Then                                    '''Sempre USATA
+        Atan2 = -PI + Atn(Y / X) - (X > 0!) * PI
     Else
         Atan2 = -PIh - (Y > 0!) * PI
     End If
@@ -359,7 +359,7 @@ Public Function LogBase(ByVal D As Double, ByVal NewBase As Double) As Double
 End Function
 
 Public Function ToString2(V As tVec2) As String
-    ToString2 = Format(V.x, "#.###") & " , " & Format(V.Y, "#.###")
+    ToString2 = Format(V.X, "#.###") & " , " & Format(V.Y, "#.###")
 End Function
 Public Function IsAngBetween(ByVal MiddleA#, ByVal StartA#, ByVal EndA#) As Boolean
     Dim T#
@@ -435,21 +435,21 @@ End Function
 '   y(x) = a + b x, for n samples
 '   The following assumes the standard deviations are unknown for x and y
 '   Return a, b and r the regression coefficient
-Public Sub LinRegress(x() As Double, Y() As Double, ra#, rb#, rr#)
+Public Sub LinRegress(X() As Double, Y() As Double, ra#, rb#, rr#)
     Dim I&, N&
     Dim sumX#, sumY#
     Dim sumX2#, sumY2#, sumXY#
     Dim sXX#, sYY#, sXY#
 
-    N = UBound(x)
+    N = UBound(X)
     ra = 0: rb = 0: rr = 0
     '/* Conpute some things we need */
     For I = 1 To N
-        sumX = sumX + x(I)
+        sumX = sumX + X(I)
         sumY = sumY + Y(I)
-        sumX2 = sumX2 + (x(I) * x(I))
+        sumX2 = sumX2 + (X(I) * X(I))
         sumY2 = sumY2 + (Y(I) * Y(I))
-        sumXY = sumXY + (x(I) * Y(I))
+        sumXY = sumXY + (X(I) * Y(I))
     Next
     sXX = sumX2 - sumX * sumX / N
     sYY = sumY2 - sumY * sumY / N
@@ -486,11 +486,11 @@ Public Function LinRegress3(P1 As tVec2, P2 As tVec2, P3 As tVec2, ra#, rb#, rr#
     N = 3: InvN = 1 / N
     ra = 0: rb = 0: rr = 0
     '/* Conpute some things we need */
-    sumX = P1.x + P2.x + P3.x
+    sumX = P1.X + P2.X + P3.X
     sumY = P1.Y + P2.Y + P3.Y
-    sumX2 = P1.x * P1.x + P2.x * P2.x + P3.x * P3.x
+    sumX2 = P1.X * P1.X + P2.X * P2.X + P3.X * P3.X
     sumY2 = P1.Y * P1.Y + P2.Y * P2.Y + P3.Y * P3.Y
-    sumXY = P1.x * P1.Y + P2.x * P2.Y + P3.x * P3.Y
+    sumXY = P1.X * P1.Y + P2.X * P2.Y + P3.X * P3.Y
     sXX = sumX2 - sumX * sumX * InvN
     sYY = sumY2 - sumY * sumY * InvN
     sXY = sumXY - sumX * sumY * InvN

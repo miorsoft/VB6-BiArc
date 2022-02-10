@@ -22,13 +22,13 @@ Option Explicit
 Private FirstPoint As tVec2
 Private FirstControlPoint As tVec2
 
-Private NP As Long
-Private BIARC() As cBiARC
-Private NBia As Long
+Private NP        As Long
+Private BIARC()   As cBiARC
+Private NBia      As Long
 
 Private mTotalLength As Double
 
-Private mClosed As Boolean
+Private mClosed   As Boolean
 
 
 Friend Property Get Npoints() As Long
@@ -105,7 +105,7 @@ Friend Sub AddPointAndTangDirection(P As tVec2, TangDir As tVec2)
 End Sub
 
 Friend Sub SetPointTangStart(PointN As Long, TangentStart As tVec2, Optional IsDirection As Boolean = False)
-    If PointN > NP - 1 Then Exit Sub    'Last point hasn't TangStart
+    If PointN > NP - 1 Then Exit Sub             'Last point hasn't TangStart
     If IsDirection Then
         BIARC(PointN).ControlPt1 = SUM2(BIARC(PointN).Point1, TangentStart)
     Else
@@ -168,7 +168,7 @@ End Sub
 
 
 Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
-    Dim currT As Double
+    Dim currT     As Double
     Dim I&, J&
     If NP < 2 Then Exit Function
     '--- FIND which Biarc "T" belong to.   (I)
@@ -196,15 +196,15 @@ Friend Sub Destroy()
 End Sub
 
 Friend Sub AutoSetTangents()
-    Dim I As Long
+    Dim I         As Long
     Dim Delta1 As tVec2, Delta2 As tVec2
-    Dim NewTang As tVec2
+    Dim NewTang   As tVec2
 
     For I = 2 To NP - 1
-        Delta1 = DIFF2(Point(I + 1), Point(I))
-        Delta2 = DIFF2(Point(I), Point(I - 1))
-'        NewTang = SUM2(Normalize2(Delta1), Normalize2(Delta2))
-        NewTang = Normalize2(SUM2(Delta1, Delta2))
+        '        Delta1 = DIFF2(Point(I + 1), Point(I))
+        '        Delta2 = DIFF2(Point(I), Point(I - 1))
+        '        NewTang = SUM2(Normalize2(Delta1), Normalize2(Delta2))
+        NewTang = Normalize2(DIFF2(Point(I + 1), Point(I - 1)))
 
         SetPointTangent I, NewTang, True
     Next
@@ -220,39 +220,46 @@ End Sub
 
 
 
-Friend Function CircleCollisionAndResponse(CenterC As tVec2, Vel As tVec2, ByVal Rad As Double, Optional Restitution As Double = 0.97) As tVec2
+Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97, Optional LeftSide As Boolean = True) As tVec2
     Dim I         As Long
     Dim D         As Double
-    Dim Circle1or2 As Long
+    Dim outCircle1or2 As Long
     Dim rr        As Double
     Dim A         As Double
     Dim TANG      As tVec2
     Dim nTang     As tVec2
     Dim Vperp     As tVec2
     Dim vAxe      As tVec2
+    Dim tRAD      As Double
     For I = 1 To NBia
         With BIARC(I)
-            D = .CircleDistance(CenterC, Rad, Circle1or2)
+            D = .CircleDistance(CircleCenter, CircleRadius, outCircle1or2, LeftSide)
             If D < 0 Then
+
+                If LeftSide Then tRAD = CircleRadius Else: tRAD = -CircleRadius
                 '--- Displace
-                If Circle1or2 = 1 Then           'Circle1
-                    A = Atan2(CenterC.X - .Center1.X, CenterC.Y - .Center1.Y)
-                    If .ClockWise1 Then rr = .Radius1 + Rad Else: rr = .Radius1 - Rad
+                If outCircle1or2 = 1 Then        'Circle1
+                    A = Atan2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
+                    If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD
                     TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
-                    CenterC = SUM2(.Center1, TANG)
+                    CircleCenter = SUM2(.Center1, TANG)
                 Else                             'Circle2
-                    A = Atan2(CenterC.X - .Center2.X, CenterC.Y - .Center2.Y)
-                    If .ClockWise2 Then rr = .Radius2 + Rad Else: rr = .Radius2 - Rad
+                    A = Atan2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
+                    If .ClockWise2 Then rr = .Radius2 + tRAD Else: rr = .Radius2 - tRAD
                     TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
-                    CenterC = SUM2(.Center2, TANG)
+                    CircleCenter = SUM2(.Center2, TANG)
                 End If
+
+
+                'If Not (LeftSide) Then TANG = MUL2(TANG, -1)
+
                 '---- Update VEL (bounce)
                 vAxe = VectorProject(Vel, TANG)
                 Vperp = DIFF2(Vel, vAxe)
                 Vel = SUM2(Vperp, MUL2(vAxe, -Restitution))
                 '-----------
-                If Circle1or2 = 1 And Not (.ClockWise1) Then TANG = MUL2(TANG, -1)
-                If Circle1or2 = 2 And Not (.ClockWise2) Then TANG = MUL2(TANG, -1)
+                If outCircle1or2 = 1 And Not (.ClockWise1) Then TANG = MUL2(TANG, -1)
+                If outCircle1or2 = 2 And Not (.ClockWise2) Then TANG = MUL2(TANG, -1)
 
                 TANG = Normalize2(TANG)
                 CircleCollisionAndResponse = Vec2(-TANG.Y, TANG.X)

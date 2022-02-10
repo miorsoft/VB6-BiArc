@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin VB.Form fCurveFit 
-   Caption         =   "Form1"
+   Caption         =   "Path test"
    ClientHeight    =   7335
    ClientLeft      =   60
    ClientTop       =   405
@@ -9,7 +9,7 @@ Begin VB.Form fCurveFit
    ScaleHeight     =   489
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   629
-   StartUpPosition =   3  'Windows Default
+   StartUpPosition =   1  'CenterOwner
    Begin VB.CommandButton cmdShapes 
       Caption         =   "Shapes"
       Height          =   975
@@ -55,19 +55,19 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Dim BI() As cBiARC
-Dim NB As Long
-Dim P() As tVec2
-Dim NP As Long
+Dim BI()          As cBiARC
+Dim NB            As Long
+Dim P()           As tVec2
+Dim NP            As Long
 
-Dim SRF2 As cCairoSurface
-Dim CC2 As cCairoContext
+Dim SRF2          As cCairoSurface
+Dim CC2           As cCairoContext
 
-Dim BiarcPath As cBiArcPath
+Dim BiarcPath     As cBiArcPath
 
-Dim T As Double
+Dim T             As Double
 
-Dim TS As Long
+Dim TS            As Long
 
 
 Private Sub Form_Activate()
@@ -78,17 +78,17 @@ Public Sub TEST()
 
 
     Dim I&, J&
-    Dim C1 As tVec2
-    Dim C2 As tVec2
+    Dim C1        As tVec2
+    Dim C2        As tVec2
     Dim R1#, R2#
     Dim A11#, A12#, A21#, A22#
 
     NP = 6                                       ' min 4 - and Multpile of 2
 
-    Dim P1 As tVec2
-    Dim P2 As tVec2
-    Dim T1 As tVec2
-    Dim T2 As tVec2
+    Dim P1        As tVec2
+    Dim P2        As tVec2
+    Dim T1        As tVec2
+    Dim T2        As tVec2
 
     ReDim P(NP)
     For I = 1 To NP
@@ -201,14 +201,14 @@ Private Sub TEST2()
 End Sub
 
 Private Sub Timer1_Timer()
-    Dim P As tVec2
-    Dim I As Long
+    Dim P         As tVec2
+    Dim I         As Long
 
     T = T + 0.01251
     If T > 1 Then T = T - 1
 
     With CC2: .SetSourceColor 0: .Paint: End With
-    BiarcPath.DRAW CC2, vbYellow, 1, 3    ', True
+    BiarcPath.DRAW CC2, vbYellow, 1, 3           ', True
     If BiarcPath.Closed Then
         CC2.SetSourceColor vbCyan, 0.33
         BiarcPath.DrawOnlyCairoArcs CC2
@@ -237,16 +237,16 @@ End Sub
 Private Sub cmdShapes_Click()
     Dim X#, Y#
     Dim oX#, oY#
-    Dim C As Long
-    Dim I As Long
-    Dim NewTang As tVec2
-    Dim Delta1 As tVec2
-    Dim Delta2 As tVec2
+    Dim C         As Long
+    Dim I         As Long
+    Dim NewTang   As tVec2
+    Dim Delta1    As tVec2
+    Dim Delta2    As tVec2
     Dim A#, R#
 
 
 
-    TS = 2    '<<<<<<<<<<<< force TS to 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    TS = 2                                       '<<<<<<<<<<<< force TS to 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     BiarcPath.Destroy
 
     Select Case TS

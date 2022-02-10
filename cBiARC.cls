@@ -56,25 +56,25 @@ Private Const arcColor1 As Long = vbGreen
 Private Const arcColor2 As Long = vbRed
 
 
-Private mPoint1 As tVec2
-Private mPoint2 As tVec2
-Private mControlP1 As tVec2                     ' Tangent control Point
+Private mPoint1   As tVec2
+Private mPoint2   As tVec2
+Private mControlP1 As tVec2                      ' Tangent control Point
 Private mControlP2 As tVec2
 Private mTangDir1 As tVec2                       'Normalized tangent Direction
 Private mTangDir2 As tVec2
 
-Private mCenter1 As tVec2
-Private mCenter2 As tVec2
-Private mRadius1 As Double
-Private mRadius2 As Double
-Private mA11 As Double
-Private mA12 As Double
-Private mA21 As Double
-Private mA22 As Double
+Private mCenter1  As tVec2
+Private mCenter2  As tVec2
+Private mRadius1  As Double
+Private mRadius2  As Double
+Private mA11      As Double
+Private mA12      As Double
+Private mA21      As Double
+Private mA22      As Double
 
-Private d1 As Double
-Private d2 As Double
-Private mJoint As tVec2
+Private d1        As Double
+Private d2        As Double
+Private mJoint    As tVec2
 
 Private mLengthArc1#
 Private mLengthArc2#
@@ -164,7 +164,7 @@ Friend Property Get ClockWise2() As Boolean
 End Property
 
 Private Sub CCDrawLine(CC As cCairoContext, mPoint1 As tVec2, mPoint2 As tVec2, Lwidth As Double, Color As Long)
-    CC.DrawLine mPoint1.x, mPoint1.Y, mPoint2.x, mPoint2.Y, , Lwidth, Color
+    CC.DrawLine mPoint1.X, mPoint1.Y, mPoint2.X, mPoint2.Y, , Lwidth, Color
 End Sub
 '''Function DrawArcFromEdge(context, mPoint1, mControlP1, mPoint2, arcWidth, color, fromP1)
 '''{
@@ -667,20 +667,21 @@ Private Sub ArcFromEdge(Point As tVec2, tangentDir As tVec2, pJoint As tVec2, fr
                         ByRef outAng1 As Double, _
                         ByRef outAng2 As Double)
 
-    Dim chord As tVec2
+    Dim chord     As tVec2
     Dim NtangentDir As tVec2
     Dim chordDotN1 As Double
     Dim StartPoint As tVec2
-    Dim EndPoint As tVec2
-    Dim P1ANG As Double
-    Dim P2ANG As Double
+    Dim EndPoint  As tVec2
+    Dim P1ANG     As Double
+    Dim P2ANG     As Double
 
     chord = DIFF2(pJoint, Point)
-    NtangentDir = Vec2(-tangentDir.Y, tangentDir.x)
+    NtangentDir = Vec2(-tangentDir.Y, tangentDir.X)
     chordDotN1 = DOT2(chord, NtangentDir)
 
     If (IsEqualEps(chordDotN1, 0)) Then
-        Stop
+    MsgBox "If (IsEqualEps(chordDotN1, 0)) Then  - Not Implemented Yet"
+        
         '// straight line
         ''        CCDrawLine CC, Point, pJoint, 5, Color
     Else
@@ -691,10 +692,10 @@ Private Sub ArcFromEdge(Point As tVec2, tangentDir As tVec2, pJoint As tVec2, fr
         StartPoint = DIFF2(Point, outCenter)
         EndPoint = DIFF2(pJoint, outCenter)
 
-        P1ANG = Atan2(StartPoint.x, StartPoint.Y)
-        P2ANG = Atan2(EndPoint.x, EndPoint.Y)
+        P1ANG = Atan2(StartPoint.X, StartPoint.Y)
+        P2ANG = Atan2(EndPoint.X, EndPoint.Y)
 
-        If (StartPoint.x * tangentDir.Y - StartPoint.Y * tangentDir.x) > 0 Then
+        If (StartPoint.X * tangentDir.Y - StartPoint.Y * tangentDir.X) > 0 Then
             If (fromP1) Then
                 outAng1 = P1ANG
                 outAng2 = P2ANG
@@ -723,30 +724,30 @@ End Sub
 Public Sub CALC(Optional CustomDistance As Double = 0)
 
 
-    Dim V As tVec2
-    Dim vMagSqr As Double
-    Dim vDotT1 As Double
+    Dim V         As tVec2
+    Dim vMagSqr   As Double
+    Dim vDotT1    As Double
 
-    Dim vDotT2 As Double
-    Dim T1DotT2 As Double
+    Dim vDotT2    As Double
+    Dim T1DotT2   As Double
     Dim denominator As Double
 
-    Dim invlen As Double
+    Dim invlen    As Double
 
-    Dim T As tVec2
-    Dim tMagSqr As Double
+    Dim T         As tVec2
+    Dim tMagSqr   As Double
     Dim equalTangents As Boolean
-    Dim perpT1 As Boolean
+    Dim perpT1    As Boolean
 
-    Dim vDotT As Double
+    Dim vDotT     As Double
 
     Dim discriminant As Double
 
-    Dim angle As Double
-    Dim Center1 As tVec2
-    Dim Center2 As tVec2
-    Dim Radius As Double
-    Dim cross As Double
+    Dim angle     As Double
+    Dim Center1   As tVec2
+    Dim Center2   As tVec2
+    Dim Radius    As Double
+    Dim cross     As Double
 
     mTangDir1 = Normalize2(DIFF2(mControlP1, mPoint1))
     mTangDir2 = Normalize2(DIFF2(mControlP2, mPoint2))
@@ -801,11 +802,11 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
             mJoint = ADDScaled2(mPoint1, V, 0.5)
             d1 = MAX_VALUE
             d2 = MAX_VALUE
-            angle = Atan2(V.x, V.Y)
+            angle = Atan2(V.X, V.Y)
             Center1 = ADDScaled2(mPoint1, V, 0.25)
             Center2 = ADDScaled2(mPoint1, V, 0.75)
             Radius = Sqr(vMagSqr) * 0.25
-            cross = V.x * mTangDir1.Y - V.Y * mTangDir1.x
+            cross = V.X * mTangDir1.Y - V.Y * mTangDir1.X
         Else
 
             vDotT = DOT2(V, T)
@@ -842,8 +843,8 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
     mLengthArc2 = mRadius2 * Abs(AngArc2)
     mLengthTot = mLengthArc1 + mLengthArc2
 
-    mClockWise1 = DOT2(Vec2(-mTangDir1.Y, mTangDir1.x), DIFF2(mJoint, SUM2(mPoint1, mTangDir1))) > 0
-    mClockWise2 = DOT2(Vec2(-mTangDir2.Y, mTangDir2.x), DIFF2(mJoint, SUM2(mPoint2, mTangDir2))) > 0
+    mClockWise1 = DOT2(Vec2(-mTangDir1.Y, mTangDir1.X), DIFF2(mJoint, SUM2(mPoint1, mTangDir1))) > 0
+    mClockWise2 = DOT2(Vec2(-mTangDir2.Y, mTangDir2.X), DIFF2(mJoint, SUM2(mPoint2, mTangDir2))) > 0
 
 End Sub
 
@@ -860,10 +861,10 @@ Public Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Do
     If FullCircles Then
         With CC
             .SetSourceColor arcColor1, 0.3
-            .Arc mCenter1.x, mCenter1.Y, mRadius1
+            .Arc mCenter1.X, mCenter1.Y, mRadius1
             .Fill
             .SetSourceColor arcColor2, 0.3
-            .Arc mCenter2.x, mCenter2.Y, mRadius2
+            .Arc mCenter2.X, mCenter2.Y, mRadius2
             .Fill
         End With
     End If
@@ -872,23 +873,23 @@ Public Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Do
     With CC
         .SetSourceColor Color, Alpha
         .SetLineWidth Width
-        .Arc mCenter1.x, mCenter1.Y, mRadius1, mA11, mA12
+        .Arc mCenter1.X, mCenter1.Y, mRadius1, mA11, mA12
         .Stroke
-        .Arc mCenter2.x, mCenter2.Y, mRadius2, mA21, mA22
+        .Arc mCenter2.X, mCenter2.Y, mRadius2, mA21, mA22
         .Stroke
     End With
 End Sub
 Public Sub DrawArcsReadyToFillStroke(CC As cCairoContext)
     With CC
         If mClockWise1 Then
-            .Arc mCenter1.x, mCenter1.Y, mRadius1, mA11, mA12
+            .Arc mCenter1.X, mCenter1.Y, mRadius1, mA11, mA12
         Else
-            .ArcNegative mCenter1.x, mCenter1.Y, mRadius1, mA12, mA11
+            .ArcNegative mCenter1.X, mCenter1.Y, mRadius1, mA12, mA11
         End If
         If mClockWise2 Then
-            .Arc mCenter2.x, mCenter2.Y, mRadius2, mA21, mA22
+            .Arc mCenter2.X, mCenter2.Y, mRadius2, mA21, mA22
         Else
-            .ArcNegative mCenter2.x, mCenter2.Y, mRadius2, mA22, mA21
+            .ArcNegative mCenter2.X, mCenter2.Y, mRadius2, mA22, mA21
         End If
     End With
 End Sub
@@ -896,26 +897,26 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
 ' Author miorsoft - reexre
     Dim Perc1#, Perc2#
 
-    Dim Out As tVec2
-    Dim DOT As Double
+    Dim Out       As tVec2
+    Dim DOT       As Double
 
     Perc1 = mLengthArc1 / mLengthTot
     Perc2 = mLengthArc2 / mLengthTot
     If T < Perc1 Then                            ' First arc
         If mClockWise1 Then
-            Out.x = mCenter1.x + Cos(mA12 - AngArc1 * (1 - T / Perc1)) * mRadius1
+            Out.X = mCenter1.X + Cos(mA12 - AngArc1 * (1 - T / Perc1)) * mRadius1
             Out.Y = mCenter1.Y + Sin(mA12 - AngArc1 * (1 - T / Perc1)) * mRadius1
         Else
-            Out.x = mCenter1.x + Cos(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
+            Out.X = mCenter1.X + Cos(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
             Out.Y = mCenter1.Y + Sin(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
         End If
     Else                                         ' Second arc
-        T = T - Perc1    '<---
+        T = T - Perc1                            '<---
         If mClockWise2 Then
-            Out.x = mCenter2.x + Cos(mA22 - AngArc2 * (1 - T / Perc2)) * mRadius2
+            Out.X = mCenter2.X + Cos(mA22 - AngArc2 * (1 - T / Perc2)) * mRadius2
             Out.Y = mCenter2.Y + Sin(mA22 - AngArc2 * (1 - T / Perc2)) * mRadius2
         Else
-            Out.x = mCenter2.x + Cos(mA21 + AngArc2 * (1 - T / Perc2)) * mRadius2
+            Out.X = mCenter2.X + Cos(mA21 + AngArc2 * (1 - T / Perc2)) * mRadius2
             Out.Y = mCenter2.Y + Sin(mA21 + AngArc2 * (1 - T / Perc2)) * mRadius2
         End If
     End If
@@ -924,27 +925,37 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
 
 End Function
 
-Friend Function CircleDistance(CircleCenter As tVec2, Rad As Double, retArc1or2 As Long) As Double
-    Dim D As Double
-    Dim A As Double
-    Dim B As Boolean
+Friend Function CircleDistance(CircleCenter As tVec2, CircleRadius As Double, retArc1or2 As Long, Optional LeftSide As Boolean = True) As Double
+    Dim D         As Double
+    Dim A         As Double
+    Dim B         As Boolean
 
-    A = Atan2(CircleCenter.x - mCenter1.x, CircleCenter.Y - mCenter1.Y)
+    A = Atan2(CircleCenter.X - mCenter1.X, CircleCenter.Y - mCenter1.Y)
     If IsAngBetween(A, mA11, mA12) Then
         '        CC.SetSourceColor vbRed
         '        CC.Arc mCenter1.X, mCenter1.Y, mRadius1: CC.Stroke
-        CircleDistance = Length2(DIFF2(Center1, CircleCenter)) - mRadius1 - Rad
-        If Not (mClockWise1) Then CircleDistance = -CircleDistance - Rad * 2
-        '            If CircleDistance < 0 Then Stop
+        CircleDistance = Length2(DIFF2(Center1, CircleCenter)) - mRadius1    '- CircleRadius
+        If LeftSide Then
+            CircleDistance = CircleDistance - CircleRadius
+        Else
+            CircleDistance = -CircleDistance - CircleRadius
+        End If
+        If Not (mClockWise1) Then CircleDistance = -CircleDistance - CircleRadius * 2
+        'If CircleDistance < 0 Then Stop
         retArc1or2 = 1
     Else
-        A = Atan2(CircleCenter.x - mCenter2.x, CircleCenter.Y - mCenter2.Y)
+        A = Atan2(CircleCenter.X - mCenter2.X, CircleCenter.Y - mCenter2.Y)
         If IsAngBetween(A, mA21, mA22) Then
             '        CC.SetSourceColor vbRed
             '        CC.Arc mCenter2.X, mCenter2.Y, mRadius2: CC.Stroke
-            CircleDistance = Length2(DIFF2(Center2, CircleCenter)) - mRadius2 - Rad
-            If Not (mClockWise2) Then CircleDistance = -CircleDistance - Rad * 2
-            '        If CircleDistance < 0 Then Stop
+            CircleDistance = Length2(DIFF2(Center2, CircleCenter)) - mRadius2    '- CircleRadius
+            If LeftSide Then
+                CircleDistance = CircleDistance - CircleRadius
+            Else
+                CircleDistance = -CircleDistance - CircleRadius
+            End If
+            If Not (mClockWise2) Then CircleDistance = -CircleDistance - CircleRadius * 2
+            'If CircleDistance < 0 Then Stop
             retArc1or2 = 2
         End If
     End If

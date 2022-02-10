@@ -6,6 +6,7 @@ Module=mVEC2D; mVEC2D.bas
 Class=cBiARC; cBiARC.cls
 Form=fCurveFit.frm
 Class=cBiArcPath; cBiArcPath.cls
+Form=fCollision.frm
 IconForm="fMain"
 Startup="fMain"
 HelpFile=""

@@ -10,6 +10,14 @@ Begin VB.Form fMain
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   626
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cCollision 
+      Caption         =   "Test Collision"
+      Height          =   975
+      Left            =   8040
+      TabIndex        =   4
+      Top             =   5760
+      Width           =   1095
+   End
    Begin VB.CheckBox chkInterpolate 
       Caption         =   "Interpolate"
       Height          =   375
@@ -29,7 +37,7 @@ Begin VB.Form fMain
       Height          =   975
       Left            =   8040
       TabIndex        =   1
-      Top             =   5760
+      Top             =   4680
       Width           =   1095
    End
    Begin VB.PictureBox PIC 
@@ -62,21 +70,27 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Private BIARC As cBiARC
+Private BIARC     As cBiARC
 
-Private T As Double
+Private T         As Double
 
-Private SRF As cCairoSurface
-Private CC As cCairoContext
-Private CP As cControlPoint
-Private cPTS As cControlPoints
+Private SRF       As cCairoSurface
+Private CC        As cCairoContext
+Private CP        As cControlPoint
+Private cPTS      As cControlPoints
 
-Private PicHDC As Long
+Private PicHDC    As Long
 
 Private Sub cCF_Click()
     chkInterpolate.value = vbUnchecked
 
     fCurveFit.Show vbModal
+End Sub
+
+Private Sub cCollision_Click()
+    chkInterpolate.value = vbUnchecked
+
+    fCollision.Show vbModal
 End Sub
 
 Private Sub chkInterpolate_Click()
@@ -122,7 +136,7 @@ Private Sub Form_Load()
 
     BIARC.CALC
 
-    cCF_Click
+    '    cCF_Click
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -135,7 +149,7 @@ Private Sub PIC_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As
 '    Dim CP      As cControlPoint
     Set CP = cPTS.CheckControlPointUnderCursor(X, Y)
     If Not CP Is Nothing Then
-        CP.SetMouseDownPoint X, Y:    ' BIARC.CalcAndDRAWBiARC P1, P2, NT1, NT2, 0    ': RENDERrc    ' RaiseEvent RefreshContents(CC)
+        CP.SetMouseDownPoint X, Y:               ' BIARC.CalcAndDRAWBiARC P1, P2, NT1, NT2, 0    ': RENDERrc    ' RaiseEvent RefreshContents(CC)
         BIARC.CALC
 
     End If
@@ -180,7 +194,7 @@ Private Sub PIC_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As S
 End Sub
 
 Private Sub Timer1_Timer()
-    Dim P As tVec2
+    Dim P         As tVec2
 
     P = BIARC.InterpolatedPointAt(T)
     T = T + 0.02007
