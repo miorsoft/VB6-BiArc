@@ -205,6 +205,10 @@ Friend Sub AutoSetTangents()
         '        Delta2 = DIFF2(Point(I), Point(I - 1))
         '        NewTang = SUM2(Normalize2(Delta1), Normalize2(Delta2))
         NewTang = Normalize2(DIFF2(Point(I + 1), Point(I - 1)))
+'        If I > 2 And I < NP - 2 Then
+'            NewTang = MUL2(NewTang, 0.5)
+'            NewTang = SUM2(NewTang, MUL2(Normalize2(DIFF2(Point(I + 2), Point(I - 2))), 0.5))
+'        End If
 
         SetPointTangent I, NewTang, True
     Next
@@ -234,22 +238,10 @@ Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, 
     For I = 1 To NBia
         With BIARC(I)
             D = .CircleDistance(CircleCenter, CircleRadius, outCircle1or2, LeftSide)
+            
             If D < 0 Then
 
                 If LeftSide Then tRAD = CircleRadius Else: tRAD = -CircleRadius
-                '                '--- Displace OLD
-                '                If outCircle1or2 = 1 Then        'Circle1
-                '                    A = Atan2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
-                '                    If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD
-                '                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
-                '                    CircleCenter = SUM2(.Center1, TANG)
-                '                Else                             'Circle2
-                '                    A = Atan2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
-                '                    If .ClockWise2 Then rr = .Radius2 + tRAD Else: rr = .Radius2 - tRAD
-                '                    TANG = Vec2(Cos(A) * rr, Sin(A) * rr)
-                '                    CircleCenter = SUM2(.Center2, TANG)
-                '                End If
-                '--- Displace NEW (without Sin Cos)
                 If outCircle1or2 = 1 Then        'Circle1
                     TANG = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
                     If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD

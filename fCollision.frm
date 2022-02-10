@@ -86,8 +86,8 @@ Public Sub TEST()
 
         .AddPointAndTangDirection Vec2(50, 300), Vec2(0, 1)
 
-        For I = 1 To 3
-            .AddPointAndTangDirection Vec2(I * 180, 600 - I * 100 - Rnd * 80), Vec2(1, 1)
+        For I = 1 To 4
+            .AddPointAndTangDirection Vec2(I * 105, 550 - I * 80 - (Rnd * 2 - 1) * 100), Vec2(1, 1)
         Next
         .AddPointAndTangDirection Vec2(600, 20), Vec2(0, -1)
 
@@ -150,7 +150,7 @@ Private Sub Timer1_Timer()
     Dim P         As tVec2
     Dim I         As Long
 
-    T = T + 0.01251
+    T = T + 0.0071
     If T > 1 Then T = T - 1
 
     With CC2: .SetSourceColor 0: .Paint: End With
@@ -186,13 +186,12 @@ Private Sub Timer1_Timer()
     
     
     '----------------- BALL
-    BallVel = MUL2(BallVel, 0.99)
-    BallVel.Y = BallVel.Y + 0.8 ' Gravity
+For I = 1 To 5
+    BallVel = MUL2(BallVel, 0.999)
+    BallVel.Y = BallVel.Y + 0.05 ' Gravity
     BallPos = SUM2(BallPos, BallVel)
-
     BiarcPath.CircleCollisionAndResponse BallPos, BallVel, BallRadius, 0.95, LeftSide
-           
-    
+Next
     '-------------------------
     
 End Sub
