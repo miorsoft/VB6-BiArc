@@ -204,7 +204,9 @@ Private Sub Timer1_Timer()
     Dim P         As tVec2
     Dim I         As Long
 
-    T = T + 0.01251
+'    T = T + 0.01251 * BiarcPath.Length
+    T = T + 10.1 / BiarcPath.Length
+    
     If T > 1 Then T = T - 1
 
     With CC2: .SetSourceColor 0: .Paint: End With

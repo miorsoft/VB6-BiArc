@@ -201,14 +201,14 @@ Friend Sub AutoSetTangents()
     Dim NewTang   As tVec2
 
     For I = 2 To NP - 1
-        '        Delta1 = DIFF2(Point(I + 1), Point(I))
-        '        Delta2 = DIFF2(Point(I), Point(I - 1))
-        '        NewTang = SUM2(Normalize2(Delta1), Normalize2(Delta2))
-        NewTang = Normalize2(DIFF2(Point(I + 1), Point(I - 1)))
-'        If I > 2 And I < NP - 2 Then
-'            NewTang = MUL2(NewTang, 0.5)
-'            NewTang = SUM2(NewTang, MUL2(Normalize2(DIFF2(Point(I + 2), Point(I - 2))), 0.5))
-'        End If
+
+        ' NewTang = Normalize2(DIFF2(Point(I + 1), Point(I - 1)))
+
+        Delta1 = DIFF2(Point(I + 1), Point(I))
+        Delta2 = DIFF2(Point(I), Point(I - 1))
+        NewTang = SUM2( _
+                  MUL2(Delta1, 1 / Length2(Delta2)), _
+                  MUL2(Delta2, 1 / Length2(Delta1)))
 
         SetPointTangent I, NewTang, True
     Next
@@ -224,45 +224,44 @@ End Sub
 
 
 
-Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97, Optional LeftSide As Boolean = True) As tVec2
+Friend Function CircleCollisionAndResponseUsingSide(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97, Optional LeftSide As Boolean = True) As tVec2
     Dim I         As Long
     Dim D         As Double
     Dim outCircle1or2 As Long
     Dim rr        As Double
     Dim A         As Double
-    Dim TANG      As tVec2
+    Dim NORMAL    As tVec2
     Dim nTang     As tVec2
-    Dim Vperp     As tVec2
-    Dim vAxe      As tVec2
+    Dim VelTangent As tVec2
+    Dim VelNormal As tVec2
     Dim tRAD      As Double
+    tRAD = CircleRadius
     For I = 1 To NBia
         With BIARC(I)
             D = .CircleDistance(CircleCenter, CircleRadius, outCircle1or2, LeftSide)
-            
             If D < 0 Then
-
-                If LeftSide Then tRAD = CircleRadius Else: tRAD = -CircleRadius
-                If outCircle1or2 = 1 Then        'Circle1
-                    TANG = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
-                    If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD
-                    TANG = MUL2(Normalize2(TANG), rr)
-                    CircleCenter = SUM2(.Center1, TANG)
-                Else                             'Circle2
-                    TANG = Vec2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
-                    If .ClockWise2 Then rr = .Radius2 + tRAD Else: rr = .Radius2 - tRAD
-                    TANG = MUL2(Normalize2(TANG), rr)
-                    CircleCenter = SUM2(.Center2, TANG)
-                End If
+                 If LeftSide Then tRAD = CircleRadius Else: tRAD = -CircleRadius ' USED
+                 If outCircle1or2 = 1 Then        'Circle1
+                     NORMAL = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
+                     If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD
+                     NORMAL = MUL2(Normalize2(NORMAL), rr)
+                     CircleCenter = SUM2(.Center1, NORMAL)
+                 Else                             'Circle2
+                     NORMAL = Vec2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
+                     If .ClockWise2 Then rr = .Radius2 + tRAD Else: rr = .Radius2 - tRAD
+                     NORMAL = MUL2(Normalize2(NORMAL), rr)
+                     CircleCenter = SUM2(.Center2, NORMAL)
+                 End If
                 '---- Update VEL (bounce)
-                vAxe = VectorProject(Vel, TANG)
-                Vperp = DIFF2(Vel, vAxe)
-                Vel = SUM2(Vperp, MUL2(vAxe, -Restitution))
+                VelNormal = VectorProject(Vel, NORMAL)
+                VelTangent = DIFF2(Vel, VelNormal)
+                Vel = SUM2(VelTangent, MUL2(VelNormal, -Restitution))
                 '-----------
-                If outCircle1or2 = 1 And Not (.ClockWise1) Then TANG = MUL2(TANG, -1)
-                If outCircle1or2 = 2 And Not (.ClockWise2) Then TANG = MUL2(TANG, -1)
+                '                If outCircle1or2 = 1 And Not (.ClockWise1) Then NORMAL = MUL2(NORMAL, -1)
+                '                If outCircle1or2 = 2 And Not (.ClockWise2) Then NORMAL = MUL2(NORMAL, -1)
 
-                TANG = Normalize2(TANG)
-                CircleCollisionAndResponse = Vec2(-TANG.Y, TANG.X)
+                NORMAL = Normalize2(NORMAL)
+                CircleCollisionAndResponseUsingSide = Vec2(-NORMAL.Y, NORMAL.X)
                 Exit For
             End If
 
@@ -270,3 +269,47 @@ Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, 
     Next
 
 End Function
+
+Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97, Optional LeftSide As Boolean = True) As tVec2
+    Dim I         As Long
+    Dim D         As Double
+    Dim outCircle1or2 As Long
+    Dim rr        As Double
+    Dim A         As Double
+    Dim NORMAL    As tVec2
+    Dim nTang     As tVec2
+    Dim VelTangent As tVec2
+    Dim VelNormal As tVec2
+    Dim cDist     As Double
+    For I = 1 To NBia
+        With BIARC(I)
+            D = .PointDistance(CircleCenter, outCircle1or2)    '<<<.......
+            ' D>0 means the point is betweens a Arc Angle
+            If D > 0 Then D = D - CircleRadius
+            If D < 0 Then
+                If outCircle1or2 = 1 Then        'Circle1
+                    NORMAL = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
+                    cDist = Length2(DIFF2(.Center1, CircleCenter))
+                    If cDist < .Radius1 Then CircleRadius = -CircleRadius
+                    NORMAL = MUL2(Normalize2(NORMAL), CircleRadius - (cDist - .Radius1))
+                    CircleCenter = SUM2(CircleCenter, NORMAL)
+                Else                             'Circle2
+                    NORMAL = Vec2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
+                    cDist = Length2(DIFF2(.Center2, CircleCenter))
+                    If cDist < .Radius2 Then CircleRadius = -CircleRadius
+                    NORMAL = MUL2(Normalize2(NORMAL), CircleRadius - (cDist - .Radius2))
+                    CircleCenter = SUM2(CircleCenter, NORMAL)
+                End If
+                '---- Update VEL (bounce)
+                NORMAL = Normalize2(NORMAL)
+                VelNormal = VectorProjectN(Vel, NORMAL)
+                VelTangent = DIFF2(Vel, VelNormal)
+                Vel = SUM2(VelTangent, MUL2(VelNormal, -Restitution))
+                '-----------
+                CircleCollisionAndResponse = Vec2(-NORMAL.Y, NORMAL.X)
+                Exit For
+            End If
+        End With
+    Next
+End Function
+

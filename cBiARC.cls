@@ -961,7 +961,8 @@ End Function
 '        End If
 'End Function
 Friend Function CircleDistance(CircleCenter As tVec2, CircleRadius As Double, OutArc1or2 As Long, Optional LeftSide As Boolean = True) As Double
-    Dim D         As Double                      '---- Clearer Function
+' returns signed distance of a circle
+
     Dim DistFromArc As Double
     If IsAngBetween(Atan2(CircleCenter.X - mCenter1.X, CircleCenter.Y - mCenter1.Y), _
                     mA11, mA12) Then
@@ -982,5 +983,18 @@ Friend Function CircleDistance(CircleCenter As tVec2, CircleRadius As Double, Ou
     ' - Very high negative CircleDistance -
     ' It works, but Circle Speed cannot be bigger than Radius at each timestep
     If CircleDistance < -CircleRadius Then CircleDistance = -CircleDistance
+End Function
+
+Friend Function PointDistance(CircleCenter As tVec2, OutArc1or2 As Long) As Double
+' Circle Speed cannot be bigger than Radius at each timestep
+    If IsAngBetween(Atan2(CircleCenter.X - mCenter1.X, CircleCenter.Y - mCenter1.Y), _
+                    mA11, mA12) Then
+        PointDistance = Abs(Length2(DIFF2(Center1, CircleCenter)) - mRadius1)
+        OutArc1or2 = 1
+    ElseIf IsAngBetween(Atan2(CircleCenter.X - mCenter2.X, CircleCenter.Y - mCenter2.Y), _
+                        mA21, mA22) Then
+        PointDistance = Abs(Length2(DIFF2(Center2, CircleCenter)) - mRadius2)
+        OutArc1or2 = 2
+    End If
 End Function
 
