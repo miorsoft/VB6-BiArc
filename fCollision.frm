@@ -64,10 +64,18 @@ Dim TS            As Long
 Dim BallPos As tVec2
 Dim BallVel As tVec2
 Dim BallRadius As Double
+Dim BallAngVel As Double
+Dim BallAng As Double
+
 Dim LeftSide       As Boolean
 
 Private Sub Form_Activate()
     TEST
+End Sub
+
+Private Sub PIC_Click()
+    TEST
+
 End Sub
 
 Public Sub TEST()
@@ -110,7 +118,7 @@ Public Sub TEST()
     End With
     BallPos = Vec2(50 + Rnd * 500, 20)
     BallVel = Vec2(0, 0)
-    BallRadius = 20
+    BallRadius = 15
 
     Timer1.Enabled = True
 
@@ -138,10 +146,6 @@ Private Sub Form_Load()
     CC2.SetLineJoin CAIRO_LINE_JOIN_ROUND
 End Sub
 
-Private Sub PIC_Click()
-    TEST
-
-End Sub
 
 
 
@@ -149,6 +153,7 @@ End Sub
 Private Sub Timer1_Timer()
     Dim P         As tVec2
     Dim I         As Long
+Dim R As tVec2
 
     T = T + 0.0071
     If T > 1 Then T = T - 1
@@ -158,8 +163,11 @@ Private Sub Timer1_Timer()
     CC2.SetSourceColor vbCyan, 0.75
     CC2.Arc BallPos.X, BallPos.Y, BallRadius
     CC2.Stroke
-    
-    
+
+    CC2.MoveTo BallPos.X, BallPos.Y
+    CC2.RelLineTo BallRadius * Cos(BallAng), BallRadius * Sin(BallAng)
+    CC2.Stroke
+
     
     BiarcPath.DRAW CC2, vbYellow, 1, 3           ', True
     If BiarcPath.Closed Then
@@ -188,9 +196,14 @@ Private Sub Timer1_Timer()
     '----------------- BALL
 For I = 1 To 5
     BallVel = MUL2(BallVel, 0.999)
+    BallAngVel = BallAngVel * 0.999
     BallVel.Y = BallVel.Y + 0.05 ' Gravity
     BallPos = SUM2(BallPos, BallVel)
-    BiarcPath.CircleCollisionAndResponse BallPos, BallVel, BallRadius, 0.95, LeftSide
+    BallAng = BallAng + BallAngVel
+    
+    'BiarcPath.CircleCollisionAndResponse BallPos, BallVel, BallRadius, 0.95
+    BiarcPath.CircleCollisionAndResponse2 BallPos, BallVel, BallRadius, BallAngVel, 0.95
+    
 Next
     '-------------------------
     

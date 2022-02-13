@@ -512,3 +512,11 @@ Public Function LinRegress3(P1 As tVec2, P2 As tVec2, P3 As tVec2, ra#, rb#, rr#
     End If
 
 End Function
+
+Public Function Rotate90(V As tVec2) As tVec2
+    With V
+        Rotate90.X = -V.Y
+        Rotate90.Y = V.X
+    End With
+End Function
+

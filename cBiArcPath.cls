@@ -270,7 +270,7 @@ Friend Function CircleCollisionAndResponseUsingSide(CircleCenter As tVec2, Vel A
 
 End Function
 
-Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97, Optional LeftSide As Boolean = True) As tVec2
+Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97) As tVec2
     Dim I         As Long
     Dim D         As Double
     Dim outCircle1or2 As Long
@@ -287,6 +287,7 @@ Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, 
             ' D>0 means the point is betweens a Arc Angle
             If D > 0 Then D = D - CircleRadius
             If D < 0 Then
+                '----------- BALL center displacement so that it's collinerar to curve
                 If outCircle1or2 = 1 Then        'Circle1
                     NORMAL = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
                     cDist = Length2(DIFF2(.Center1, CircleCenter))
@@ -312,4 +313,62 @@ Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, 
         End With
     Next
 End Function
+Friend Function CircleCollisionAndResponse2(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, ByRef InOutAngVel As Double, Optional Restitution As Double = 0.97) As tVec2
+    Dim I         As Long
+    Dim D         As Double
+    Dim outCircle1or2 As Long
+    Dim rr        As Double
+    Dim A         As Double
+    Dim NORMAL    As tVec2
+    Dim nTang     As tVec2
+    Dim VelTangent As tVec2
+    Dim TVelTangent As tVec2
+    Dim VelNormal As tVec2
+    Dim cDist     As Double
+    Dim VelTDot   As Double
+    Dim S         As Double
+    S = 1
+    For I = 1 To NBia
+        With BIARC(I)
+            D = .PointDistance(CircleCenter, outCircle1or2)    '<<<.......
+            ' D>0 means the point is betweens a Arc Angle
+            If D > 0 Then D = D - CircleRadius
+            If D < 0 Then
+                '----------- BALL center displacement so that it's collinerar to curve
+                If outCircle1or2 = 1 Then        'Circle1
+                    NORMAL = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
+                    cDist = Length2(DIFF2(.Center1, CircleCenter))
+                    If cDist < .Radius1 Then CircleRadius = -CircleRadius: S = -S
+                    NORMAL = MUL2(Normalize2(NORMAL), CircleRadius - (cDist - .Radius1))
+                    CircleCenter = SUM2(CircleCenter, NORMAL)
+                Else                             'Circle2
+                    NORMAL = Vec2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
+                    cDist = Length2(DIFF2(.Center2, CircleCenter))
+                    If cDist < .Radius2 Then CircleRadius = -CircleRadius: S = -S
+                    NORMAL = MUL2(Normalize2(NORMAL), CircleRadius - (cDist - .Radius2))
+                    CircleCenter = SUM2(CircleCenter, NORMAL)
+                End If
+                '---- Update VEL (bounce)
+                NORMAL = Normalize2(NORMAL)
+                VelNormal = VectorProjectN(Vel, NORMAL)
+                VelTangent = DIFF2(Vel, VelNormal)
+                TVelTangent = VelTangent
 
+                VelTDot = DOT2(TVelTangent, Rotate90(NORMAL))
+
+                ' ?????????????????
+                'VelTangent = SUM2(MUL2(VelTangent, 0.9), MUL2(Rotate90(NORMAL), -0.01 * S * VelTDot * CircleRadius * InOutAngVel))
+
+
+                '-----------
+
+                InOutAngVel = InOutAngVel * 0.5 + S * VelTDot / CircleRadius
+
+
+                Vel = SUM2(VelTangent, MUL2(VelNormal, -Restitution))
+                CircleCollisionAndResponse2 = Rotate90(NORMAL)
+                Exit For
+            End If
+        End With
+    Next
+End Function
