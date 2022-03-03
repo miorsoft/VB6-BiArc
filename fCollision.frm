@@ -81,8 +81,6 @@ End Sub
 Public Sub TEST()
     Dim tp        As tVec2
 
-
-
     Dim I&
     With CC2: .SetSourceColor 0: .Paint: End With
 

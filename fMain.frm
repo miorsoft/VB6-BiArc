@@ -10,12 +10,20 @@ Begin VB.Form fMain
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   626
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cBIimage 
+      Caption         =   "Test Image"
+      Height          =   975
+      Left            =   8040
+      TabIndex        =   5
+      Top             =   5760
+      Width           =   1095
+   End
    Begin VB.CommandButton cCollision 
       Caption         =   "Test Collision"
       Height          =   975
       Left            =   8040
       TabIndex        =   4
-      Top             =   5760
+      Top             =   4560
       Width           =   1095
    End
    Begin VB.CheckBox chkInterpolate 
@@ -37,7 +45,7 @@ Begin VB.Form fMain
       Height          =   975
       Left            =   8040
       TabIndex        =   1
-      Top             =   4680
+      Top             =   3360
       Width           =   1095
    End
    Begin VB.PictureBox PIC 
@@ -80,6 +88,13 @@ Private CP        As cControlPoint
 Private cPTS      As cControlPoints
 
 Private PicHDC    As Long
+
+Private Sub cBIimage_Click()
+   chkInterpolate.value = vbUnchecked
+
+    fImage.Show vbModal
+End Sub
+
 
 Private Sub cCF_Click()
     chkInterpolate.value = vbUnchecked
@@ -137,6 +152,8 @@ Private Sub Form_Load()
     BIARC.CALC
 
     '    cCF_Click
+    cBIimage_Click
+    
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)

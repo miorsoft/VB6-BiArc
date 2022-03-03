@@ -893,7 +893,7 @@ Public Sub DrawArcsReadyToFillStroke(CC As cCairoContext)
         End If
     End With
 End Sub
-Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
+Friend Function InterpolatedPointAt(ByVal T As Double, Optional WArc As Long = 0) As tVec2
 ' Author miorsoft - reexre
     Dim Perc1#, Perc2#
 
@@ -910,6 +910,7 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
             Out.X = mCenter1.X + Cos(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
             Out.Y = mCenter1.Y + Sin(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
         End If
+        WArc = 1
     Else                                         ' Second arc
         T = T - Perc1                            '<---
         If mClockWise2 Then
@@ -919,6 +920,7 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
             Out.X = mCenter2.X + Cos(mA21 + AngArc2 * (1 - T / Perc2)) * mRadius2
             Out.Y = mCenter2.Y + Sin(mA21 + AngArc2 * (1 - T / Perc2)) * mRadius2
         End If
+        WArc = 2
     End If
 
     InterpolatedPointAt = Out

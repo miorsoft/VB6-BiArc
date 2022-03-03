@@ -7,6 +7,7 @@ Class=cBiARC; cBiARC.cls
 Form=fCurveFit.frm
 Class=cBiArcPath; cBiArcPath.cls
 Form=fCollision.frm
+Form=fImage.frm
 IconForm="fMain"
 Startup="fMain"
 HelpFile=""
