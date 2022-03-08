@@ -5,6 +5,15 @@ Begin VB.Form fCurveFit
    ClientLeft      =   60
    ClientTop       =   405
    ClientWidth     =   9435
+   BeginProperty Font 
+      Name            =   "Tahoma"
+      Size            =   9
+      Charset         =   0
+      Weight          =   400
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
    LinkTopic       =   "Form1"
    ScaleHeight     =   489
    ScaleMode       =   3  'Pixel
@@ -204,9 +213,9 @@ Private Sub Timer1_Timer()
     Dim P         As tVec2
     Dim I         As Long
 
-'    T = T + 0.01251 * BiarcPath.Length
+    '    T = T + 0.01251 * BiarcPath.Length
     T = T + 10.1 / BiarcPath.Length
-    
+
     If T > 1 Then T = T - 1
 
     With CC2: .SetSourceColor 0: .Paint: End With
@@ -244,7 +253,7 @@ Private Sub cmdShapes_Click()
     Dim NewTang   As tVec2
     Dim Delta1    As tVec2
     Dim Delta2    As tVec2
-    Dim A#, R#
+    Dim a#, R#
 
 
 
@@ -282,10 +291,10 @@ Private Sub cmdShapes_Click()
             '                oX = X
             '                oY = Y
 
-            For A = 0 To PI2 Step 0.4
+            For a = 0 To PI2 Step 0.4
                 R = (150 + (Rnd * 2 - 1) * 70)
-                X = 250 + Cos(A) * R
-                Y = 220 + Sin(A) * R
+                X = 250 + Cos(a) * R
+                Y = 220 + Sin(a) * R
                 .AddPointAndTangDirection Vec2(X, Y), Vec2(1, 0)
                 C = C + 1
             Next

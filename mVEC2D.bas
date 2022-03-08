@@ -7,6 +7,17 @@ Public Type tVec2
     X             As Double
     Y             As Double
 End Type
+Public Type tVec3
+    X             As Double
+    Y             As Double
+    z             As Double
+End Type
+
+Public Type tRGB
+    X             As Double
+    Y             As Double
+    z             As Double
+End Type
 
 Public Type tMAT2
     m00           As Double
@@ -28,6 +39,13 @@ Public Const MAX_VALUE As Double = 1E+32
 Public Function Vec2(X As Double, Y As Double) As tVec2
     Vec2.X = X
     Vec2.Y = Y
+End Function
+
+Public Function Col3(R As Byte, G As Byte, b As Byte) As tRGB
+    Col3.X = R
+    Col3.Y = G
+    Col3.z = b
+
 End Function
 
 Public Function Vec2Negative(V As tVec2) As tVec2
@@ -131,44 +149,44 @@ End Function
 
 
 
-Public Function Vec2MIN(A As tVec2, B As tVec2) As tVec2
-    Vec2MIN.X = IIf(A.X < B.X, A.X, B.X)
-    Vec2MIN.Y = IIf(A.Y < B.Y, A.Y, B.Y)
+Public Function Vec2MIN(a As tVec2, b As tVec2) As tVec2
+    Vec2MIN.X = IIf(a.X < b.X, a.X, b.X)
+    Vec2MIN.Y = IIf(a.Y < b.Y, a.Y, b.Y)
 End Function
 
-Public Function Vec2MAX(A As tVec2, B As tVec2) As tVec2
-    Vec2MAX.X = IIf(A.X > B.X, A.X, B.X)
-    Vec2MAX.Y = IIf(A.Y > B.Y, A.Y, B.Y)
+Public Function Vec2MAX(a As tVec2, b As tVec2) As tVec2
+    Vec2MAX.X = IIf(a.X > b.X, a.X, b.X)
+    Vec2MAX.Y = IIf(a.Y > b.Y, a.Y, b.Y)
 End Function
 '  return a.x * b.x + a.y * b.y;
-Public Function DOT2(A As tVec2, B As tVec2) As Double
-    DOT2 = A.X * B.X + A.Y * B.Y
+Public Function DOT2(a As tVec2, b As tVec2) As Double
+    DOT2 = a.X * b.X + a.Y * b.Y
 End Function
 'inline Vec2 Cross( const Vec2& v, real a )
 '{
 '  return Vec2( a * v.y, -a * v.x );
 '}
-Public Function Vec2CROSSva(V As tVec2, A As Double) As tVec2
-    Vec2CROSSva.X = A * V.Y
-    Vec2CROSSva.Y = -A * V.X
+Public Function Vec2CROSSva(V As tVec2, a As Double) As tVec2
+    Vec2CROSSva.X = a * V.Y
+    Vec2CROSSva.Y = -a * V.X
 End Function
 'inline Vec2 Cross( real a, const Vec2& v )
 '{
 '  return Vec2( -a * v.y, a * v.x );
 '}
-Public Function Vec2CROSSav(A As Double, V As tVec2) As tVec2
-    Vec2CROSSav.X = -A * V.Y
-    Vec2CROSSav.Y = A * V.X
+Public Function Vec2CROSSav(a As Double, V As tVec2) As tVec2
+    Vec2CROSSav.X = -a * V.Y
+    Vec2CROSSav.Y = a * V.X
 End Function
 'inline real Cross( const Vec2& a, const Vec2& b )
 '{
 '  return a.x * b.y - a.y * b.x;
 '}
-Public Function Vec2CROSS(A As tVec2, B As tVec2) As Double
-    Vec2CROSS = A.X * B.Y - A.Y * B.X
+Public Function Vec2CROSS(a As tVec2, b As tVec2) As Double
+    Vec2CROSS = a.X * b.Y - a.Y * b.X
 End Function
 
-Public Function Vec2CROSS2(A As tVec2, B As tVec2) As tVec2
+Public Function Vec2CROSS2(a As tVec2, b As tVec2) As tVec2
 '    float x = lhs.m_y*rhs.m_z - lhs.m_z*rhs.m_y;
 '    float y = lhs.m_z*rhs.m_x - lhs.m_x*rhs.m_z;
 '    float z = lhs.m_x*rhs.m_y - lhs.m_y*rhs.m_x;
@@ -178,8 +196,8 @@ Public Function Vec2CROSS2(A As tVec2, B As tVec2) As tVec2
 '    Vec2CROSS2.Y = A.X * B.Y - A.Y * B.X
 
 
-    Vec2CROSS2.X = -(B.Y - A.Y)
-    Vec2CROSS2.Y = (B.X - A.X)
+    Vec2CROSS2.X = -(b.Y - a.Y)
+    Vec2CROSS2.Y = (b.X - a.X)
 
 
     ''''    Vec2CROSS2.X = A.Y * B.z - A.z * B.Y
@@ -194,12 +212,12 @@ Public Function Vec2CROSS2(A As tVec2, B As tVec2) As tVec2
 End Function
 
 
-Public Function Vec2DISTANCEsq(A As tVec2, B As tVec2) As Double
-    Dim Dx        As Double
-    Dim Dy        As Double
-    Dx = A.X - B.X
-    Dy = A.Y - B.Y
-    Vec2DISTANCEsq = Dx * Dx + Dy * Dy
+Public Function Vec2DISTANCEsq(a As tVec2, b As tVec2) As Double
+    Dim DX        As Double
+    Dim DY        As Double
+    DX = a.X - b.X
+    DY = a.Y - b.Y
+    Vec2DISTANCEsq = DX * DX + DY * DY
 End Function
 
 
@@ -329,8 +347,8 @@ Public Function AngleDIFF(ByVal A1 As Double, ByVal A2 As Double) As Double
 
 End Function
 
-Public Function IsEqualEps(ByVal A As Double, ByVal B As Double) As Boolean
-    IsEqualEps = (Abs(A - B) < EPSILON)
+Public Function IsEqualEps(ByVal a As Double, ByVal b As Double) As Boolean
+    IsEqualEps = (Abs(a - b) < EPSILON)
 End Function
 
 Public Function Atan2(ByVal X As Double, ByVal Y As Double) As Double
@@ -349,9 +367,9 @@ End Function
 ' @param Remainder The variable to place the remainder of the division.
 ' @return The quotient of the division.
 '
-Public Function DivRem(ByVal A As Long, ByVal B As Long, ByRef remainder As Long) As Long
-    DivRem = A \ B
-    remainder = A - (B * DivRem)                 ' this is about 2x faster than Mod.
+Public Function DivRem(ByVal a As Long, ByVal b As Long, ByRef remainder As Long) As Long
+    DivRem = a \ b
+    remainder = a - (b * DivRem)                 ' this is about 2x faster than Mod.
 End Function
 
 Public Function LogBase(ByVal D As Double, ByVal NewBase As Double) As Double
@@ -364,15 +382,15 @@ End Function
 Public Function IsAngBetween(ByVal MiddleA#, ByVal StartA#, ByVal EndA#) As Boolean
     Dim T#
     'https://math.stackexchange.com/questions/1044905/simple-angle-between-two-angles-of-circle
-    If StartA < 0 Then StartA = StartA + PI2
-    If EndA < 0 Then EndA = EndA + PI2
-    If MiddleA < 0 Then MiddleA = MiddleA + PI2
+    If StartA < 0# Then StartA = StartA + PI2
+    If EndA < 0# Then EndA = EndA + PI2
+    If MiddleA < 0# Then MiddleA = MiddleA + PI2
 
     MiddleA = MiddleA - StartA
     EndA = EndA - StartA
-    If MiddleA < 0 Then MiddleA = MiddleA + PI2
-    If EndA < 0 Then EndA = EndA + PI2
-    IsAngBetween = MiddleA < EndA
+    If MiddleA < 0# Then MiddleA = MiddleA + PI2
+    If EndA < 0# Then EndA = EndA + PI2
+    IsAngBetween = MiddleA <= EndA
 
 End Function
 
@@ -519,4 +537,52 @@ Public Function Rotate90(V As tVec2) As tVec2
         Rotate90.Y = V.X
     End With
 End Function
+
+Public Function min(a#, b#) As Double
+    min = a
+    If min > b Then min = b
+End Function
+
+Public Function max(a#, b#) As Double
+    max = a
+    If max < b Then max = b
+End Function
+
+
+Public Function Vec3BilinearInterpolation(a As tVec3, _
+                                          b As tVec3, _
+                                          C As tVec3, _
+                                          D As tVec3, _
+                                          U As Double, ByVal V As Double) As tVec3
+
+    Dim uv        As Double
+    uv = U * V
+
+    Vec3BilinearInterpolation.X = a.X + (b.X - a.X) * U + (C.X - a.X) * V + (a.X - b.X + D.X - C.X) * uv
+    Vec3BilinearInterpolation.Y = a.Y + (b.Y - a.Y) * U + (C.Y - a.Y) * V + (a.Y - b.Y + D.Y - C.Y) * uv
+    Vec3BilinearInterpolation.z = a.z + (b.z - a.z) * U + (C.z - a.z) * V + (a.z - b.z + D.z - C.z) * uv
+
+End Function
+
+Public Function Col3BilinearInterpolation(c00 As tRGB, _
+                                          c10 As tRGB, _
+                                          c01 As tRGB, _
+                                          c11 As tRGB, _
+                                          U As Double, ByVal V As Double) As tRGB
+
+'https://en.wikipedia.org/wiki/Bilinear_interpolation#On_the_unit_square
+
+    Dim uv        As Double
+    uv = U * V
+
+    Col3BilinearInterpolation.X = c00.X + (c10.X - c00.X) * U + (c01.X - c00.X) * V + (c00.X - c10.X + c11.X - c01.X) * uv
+    Col3BilinearInterpolation.Y = c00.Y + (c10.Y - c00.Y) * U + (c01.Y - c00.Y) * V + (c00.Y - c10.Y + c11.Y - c01.Y) * uv
+    Col3BilinearInterpolation.z = c00.z + (c10.z - c00.z) * U + (c01.z - c00.z) * V + (c00.z - c10.z + c11.z - c01.z) * uv
+
+    ' the SAME
+    '    Col3BilinearInterpolation.X = c00.X * (1 - U) * (1 - V) + c10.X * U * (1 - V) + c01.X * (1 - U) * V + c11.X * uv
+    '    Col3BilinearInterpolation.Y = c00.Y * (1 - U) * (1 - V) + c10.Y * U * (1 - V) + c01.Y * (1 - U) * V + c11.Y * uv
+    '    Col3BilinearInterpolation.z = c00.z * (1 - U) * (1 - V) + c10.z * U * (1 - V) + c01.z * (1 - U) * V + c11.z * uv
+End Function
+
 

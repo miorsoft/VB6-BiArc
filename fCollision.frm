@@ -5,6 +5,15 @@ Begin VB.Form fCollision
    ClientLeft      =   60
    ClientTop       =   405
    ClientWidth     =   10995
+   BeginProperty Font 
+      Name            =   "Tahoma"
+      Size            =   9
+      Charset         =   0
+      Weight          =   400
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
    LinkTopic       =   "Form1"
    ScaleHeight     =   548
    ScaleMode       =   3  'Pixel
@@ -61,13 +70,13 @@ Dim T             As Double
 
 Dim TS            As Long
 
-Dim BallPos As tVec2
-Dim BallVel As tVec2
-Dim BallRadius As Double
-Dim BallAngVel As Double
-Dim BallAng As Double
+Dim BallPos       As tVec2
+Dim BallVel       As tVec2
+Dim BallRadius    As Double
+Dim BallAngVel    As Double
+Dim BallAng       As Double
 
-Dim LeftSide       As Boolean
+Dim LeftSide      As Boolean
 
 Private Sub Form_Activate()
     TEST
@@ -151,13 +160,13 @@ End Sub
 Private Sub Timer1_Timer()
     Dim P         As tVec2
     Dim I         As Long
-Dim R As tVec2
+    Dim R         As tVec2
 
     T = T + 0.0071
     If T > 1 Then T = T - 1
 
     With CC2: .SetSourceColor 0: .Paint: End With
-    
+
     CC2.SetSourceColor vbCyan, 0.75
     CC2.Arc BallPos.X, BallPos.Y, BallRadius
     CC2.Stroke
@@ -166,7 +175,7 @@ Dim R As tVec2
     CC2.RelLineTo BallRadius * Cos(BallAng), BallRadius * Sin(BallAng)
     CC2.Stroke
 
-    
+
     BiarcPath.DRAW CC2, vbYellow, 1, 3           ', True
     If BiarcPath.Closed Then
         CC2.SetSourceColor vbCyan, 0.33
@@ -189,22 +198,22 @@ Dim R As tVec2
 
     SRF2.DrawToDC PIC.hDC
     DoEvents
-    
-    
+
+
     '----------------- BALL
-For I = 1 To 5
-    BallVel = MUL2(BallVel, 0.999)
-    BallAngVel = BallAngVel * 0.999
-    BallVel.Y = BallVel.Y + 0.05 ' Gravity
-    BallPos = SUM2(BallPos, BallVel)
-    BallAng = BallAng + BallAngVel
-    
-    'BiarcPath.CircleCollisionAndResponse BallPos, BallVel, BallRadius, 0.95
-    BiarcPath.CircleCollisionAndResponse2 BallPos, BallVel, BallRadius, BallAngVel, 0.95
-    
-Next
+    For I = 1 To 5
+        BallVel = MUL2(BallVel, 0.999)
+        BallAngVel = BallAngVel * 0.999
+        BallVel.Y = BallVel.Y + 0.05             ' Gravity
+        BallPos = SUM2(BallPos, BallVel)
+        BallAng = BallAng + BallAngVel
+
+        'BiarcPath.CircleCollisionAndResponse BallPos, BallVel, BallRadius, 0.95
+        BiarcPath.CircleCollisionAndResponse2 BallPos, BallVel, BallRadius, BallAngVel, 0.95
+
+    Next
     '-------------------------
-    
+
 End Sub
 
 

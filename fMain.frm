@@ -5,6 +5,15 @@ Begin VB.Form fMain
    ClientLeft      =   120
    ClientTop       =   450
    ClientWidth     =   9390
+   BeginProperty Font 
+      Name            =   "Tahoma"
+      Size            =   9
+      Charset         =   0
+      Weight          =   400
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
    LinkTopic       =   "Form1"
    ScaleHeight     =   465
    ScaleMode       =   3  'Pixel
@@ -33,7 +42,7 @@ Begin VB.Form fMain
       TabIndex        =   2
       Top             =   1080
       Value           =   1  'Checked
-      Width           =   1095
+      Width           =   1215
    End
    Begin VB.Timer Timer1 
       Interval        =   40
@@ -64,7 +73,7 @@ Begin VB.Form fMain
    End
    Begin VB.Label Label1 
       Caption         =   "Click and Drag Control Points"
-      Height          =   495
+      Height          =   615
       Left            =   8040
       TabIndex        =   3
       Top             =   120
@@ -78,11 +87,11 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Private BIARC     As cBiARC
+Private BiArc     As cBiARC
 
 Private T         As Double
 
-Private SRF       As cCairoSurface
+Private Srf       As cCairoSurface
 Private CC        As cCairoContext
 Private CP        As cControlPoint
 Private cPTS      As cControlPoints
@@ -90,7 +99,7 @@ Private cPTS      As cControlPoints
 Private PicHDC    As Long
 
 Private Sub cBIimage_Click()
-   chkInterpolate.value = vbUnchecked
+    chkInterpolate.value = vbUnchecked
 
     fImage.Show vbModal
 End Sub
@@ -115,21 +124,21 @@ End Sub
 
 Private Sub Form_Activate()
 
-    BIARC.DRAW CC, vbYellow, 1, 3
+    BiArc.DRAW CC, vbYellow, 1, 3
 
 
     cPTS.DRAW CC
-    SRF.DrawToDC PicHDC
+    Srf.DrawToDC PicHDC
     DoEvents
-    SRF.DrawToDC PicHDC
+    Srf.DrawToDC PicHDC
 
 End Sub
 
 Private Sub Form_Load()
-    Set BIARC = New cBiARC
+    Set BiArc = New cBiARC
 
-    Set SRF = Cairo.CreateSurface(fMain.PIC.Width, fMain.PIC.Height, ImageSurface)    'size of our rendering-area in Pixels
-    Set CC = SRF.CreateContext                   'create a Drawing-Context from the PixelSurface above
+    Set Srf = Cairo.CreateSurface(fMain.PIC.Width, fMain.PIC.Height, ImageSurface)    'size of our rendering-area in Pixels
+    Set CC = Srf.CreateContext                   'create a Drawing-Context from the PixelSurface above
 
     CC.AntiAlias = CAIRO_ANTIALIAS_BEST
     CC.SetLineCap CAIRO_LINE_CAP_ROUND
@@ -141,19 +150,19 @@ Private Sub Form_Load()
 
     Set cPTS = New cControlPoints
 
-    BIARC.SetPointsAndControlPts Vec2(80, 120), Vec2(80 + 20, 120 + 40), _
+    BiArc.SetPointsAndControlPts Vec2(80, 120), Vec2(80 + 20, 120 + 40), _
                                  Vec2(300, 150), Vec2(300 + 20, 150 - 40)
 
-    cPTS.Add "C1", BIARC.Point1.X, BIARC.Point1.Y, vbGreen, 14, 0.7
-    cPTS.Add "C2", BIARC.Point2.X, BIARC.Point2.Y, vbRed, 14, 0.7
-    cPTS.Add "T1", BIARC.ControlPt1.X, BIARC.ControlPt1.Y, vbGreen, 9, 0.7
-    cPTS.Add "T2", BIARC.ControlPt2.X, BIARC.ControlPt2.Y, vbRed, 9, 0.7
+    cPTS.Add "C1", BiArc.Point1.X, BiArc.Point1.Y, vbGreen, 14, 0.7
+    cPTS.Add "C2", BiArc.Point2.X, BiArc.Point2.Y, vbRed, 14, 0.7
+    cPTS.Add "T1", BiArc.ControlPt1.X, BiArc.ControlPt1.Y, vbGreen, 9, 0.7
+    cPTS.Add "T2", BiArc.ControlPt2.X, BiArc.ControlPt2.Y, vbRed, 9, 0.7
 
-    BIARC.CALC
+    BiArc.CALC
 
     '    cCF_Click
     cBIimage_Click
-    
+
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -167,7 +176,7 @@ Private Sub PIC_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As
     Set CP = cPTS.CheckControlPointUnderCursor(X, Y)
     If Not CP Is Nothing Then
         CP.SetMouseDownPoint X, Y:               ' BIARC.CalcAndDRAWBiARC P1, P2, NT1, NT2, 0    ': RENDERrc    ' RaiseEvent RefreshContents(CC)
-        BIARC.CALC
+        BiArc.CALC
 
     End If
 
@@ -181,23 +190,23 @@ Private Sub PIC_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As
 
             Select Case CP.Key
             Case "C1"
-                BIARC.Point1 = Vec2(CP.X, CP.Y)
+                BiArc.Point1 = Vec2(CP.X, CP.Y)
             Case "C2"
-                BIARC.Point2 = Vec2(CP.X, CP.Y)
+                BiArc.Point2 = Vec2(CP.X, CP.Y)
             Case "T1"
-                BIARC.ControlPt1 = Vec2(CP.X, CP.Y)
+                BiArc.ControlPt1 = Vec2(CP.X, CP.Y)
             Case "T2"
-                BIARC.ControlPt2 = Vec2(CP.X, CP.Y)
+                BiArc.ControlPt2 = Vec2(CP.X, CP.Y)
             End Select
 
 
 
-            BIARC.CALC
+            BiArc.CALC
             With CC: .SetSourceColor 0: .Paint: End With
-            BIARC.DRAW CC, vbYellow, 1, 3, True, True
+            BiArc.DRAW CC, vbYellow, 1, 3, True, True
 
             cPTS.DRAW CC
-            SRF.DrawToDC PicHDC
+            Srf.DrawToDC PicHDC
             DoEvents
             '--------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         End If
@@ -213,17 +222,17 @@ End Sub
 Private Sub Timer1_Timer()
     Dim P         As tVec2
 
-    P = BIARC.InterpolatedPointAt(T)
+    P = BiArc.InterpolatedPointAt(T)
     T = T + 0.02007
     If T > 1 Then T = T - 1
-    BIARC.CALC
+    BiArc.CALC
     With CC: .SetSourceColor 0: .Paint: End With
-    BIARC.DRAW CC, vbYellow, 1, 3, True, True
+    BiArc.DRAW CC, vbYellow, 1, 3, True, True
 
     CC.Arc P.X, P.Y, 8
     CC.Stroke
 
     cPTS.DRAW CC
-    SRF.DrawToDC PicHDC
+    Srf.DrawToDC PicHDC
     DoEvents
 End Sub

@@ -85,6 +85,22 @@ Private AngArc2#
 Private mClockWise1 As Boolean
 Private mClockWise2 As Boolean
 
+Private mBound1   As tVec2
+Private mBound2   As tVec2
+Private mBound3   As tVec2
+Private mBound4   As tVec2
+
+Private SourceSRF As cCairoSurface
+Private SRF2      As cCairoSurface
+Private pW        As Long
+Private pH        As Long
+Private ImaScaleX As Double
+Private ImaScaleY As Double
+Private InvScaleX As Double
+Private InvScaleY As Double
+Private ImaXOffset As Double
+
+
 Friend Property Let Point1(P As tVec2)
     mPoint1 = P
 End Property
@@ -162,6 +178,15 @@ End Property
 Friend Property Get ClockWise2() As Boolean
     ClockWise2 = mClockWise2
 End Property
+
+Friend Sub GetBounds(a As tVec2, b As tVec2)
+    a.X = min(min(mBound1.X, mBound2.X), min(mBound3.X, mBound4.X))
+    a.Y = min(min(mBound1.Y, mBound2.Y), min(mBound3.Y, mBound4.Y))
+    b.X = max(max(mBound1.X, mBound2.X), max(mBound3.X, mBound4.X))
+    b.Y = max(max(mBound1.Y, mBound2.Y), max(mBound3.Y, mBound4.Y))
+
+End Sub
+
 
 Private Sub CCDrawLine(CC As cCairoContext, mPoint1 As tVec2, mPoint2 As tVec2, Lwidth As Double, Color As Long)
     CC.DrawLine mPoint1.X, mPoint1.Y, mPoint2.X, mPoint2.Y, , Lwidth, Color
@@ -680,8 +705,8 @@ Private Sub ArcFromEdge(Point As tVec2, tangentDir As tVec2, pJoint As tVec2, fr
     chordDotN1 = DOT2(chord, NtangentDir)
 
     If (IsEqualEps(chordDotN1, 0)) Then
-    MsgBox "If (IsEqualEps(chordDotN1, 0)) Then  - Not Implemented Yet"
-        
+        MsgBox "If (IsEqualEps(chordDotN1, 0)) Then  - Not Implemented Yet"
+
         '// straight line
         ''        CCDrawLine CC, Point, pJoint, 5, Color
     Else
@@ -833,6 +858,18 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
     '****************************************************************
 
 
+
+
+    '-------------- BOUNDS
+    mBound1 = mPoint1
+    mBound2 = ADDScaled2(mPoint1, mTangDir1, d1)
+    mBound3 = mPoint2
+    mBound4 = ADDScaled2(mPoint2, mTangDir2, -d1)
+
+    '-------------------------
+
+
+
     ' | Author miorsoft - reexre
     ' |
     ' V
@@ -845,6 +882,8 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
 
     mClockWise1 = DOT2(Vec2(-mTangDir1.Y, mTangDir1.X), DIFF2(mJoint, SUM2(mPoint1, mTangDir1))) > 0
     mClockWise2 = DOT2(Vec2(-mTangDir2.Y, mTangDir2.X), DIFF2(mJoint, SUM2(mPoint2, mTangDir2))) > 0
+
+
 
 End Sub
 
@@ -879,6 +918,10 @@ Public Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Do
         .Stroke
     End With
 End Sub
+
+
+
+
 Public Sub DrawArcsReadyToFillStroke(CC As cCairoContext)
     With CC
         If mClockWise1 Then
@@ -896,29 +939,33 @@ End Sub
 Friend Function InterpolatedPointAt(ByVal T As Double, Optional WArc As Long = 0) As tVec2
 ' Author miorsoft - reexre
     Dim Perc1#, Perc2#
+    Dim iPerc1#, iPerc2#
+
 
     Dim Out       As tVec2
-    Dim DOT       As Double
 
     Perc1 = mLengthArc1 / mLengthTot
     Perc2 = mLengthArc2 / mLengthTot
+    iPerc1 = 1# / Perc1
+    iPerc2 = 1# / Perc2
+
     If T < Perc1 Then                            ' First arc
         If mClockWise1 Then
-            Out.X = mCenter1.X + Cos(mA12 - AngArc1 * (1 - T / Perc1)) * mRadius1
-            Out.Y = mCenter1.Y + Sin(mA12 - AngArc1 * (1 - T / Perc1)) * mRadius1
+            Out.X = mCenter1.X + Cos(mA12 - AngArc1 * (1# - T * iPerc1)) * mRadius1
+            Out.Y = mCenter1.Y + Sin(mA12 - AngArc1 * (1# - T * iPerc1)) * mRadius1
         Else
-            Out.X = mCenter1.X + Cos(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
-            Out.Y = mCenter1.Y + Sin(mA11 + AngArc1 * (1 - T / Perc1)) * mRadius1
+            Out.X = mCenter1.X + Cos(mA11 + AngArc1 * (1# - T * iPerc1)) * mRadius1
+            Out.Y = mCenter1.Y + Sin(mA11 + AngArc1 * (1# - T * iPerc1)) * mRadius1
         End If
         WArc = 1
     Else                                         ' Second arc
         T = T - Perc1                            '<---
         If mClockWise2 Then
-            Out.X = mCenter2.X + Cos(mA22 - AngArc2 * (1 - T / Perc2)) * mRadius2
-            Out.Y = mCenter2.Y + Sin(mA22 - AngArc2 * (1 - T / Perc2)) * mRadius2
+            Out.X = mCenter2.X + Cos(mA22 - AngArc2 * (1# - T * iPerc2)) * mRadius2
+            Out.Y = mCenter2.Y + Sin(mA22 - AngArc2 * (1# - T * iPerc2)) * mRadius2
         Else
-            Out.X = mCenter2.X + Cos(mA21 + AngArc2 * (1 - T / Perc2)) * mRadius2
-            Out.Y = mCenter2.Y + Sin(mA21 + AngArc2 * (1 - T / Perc2)) * mRadius2
+            Out.X = mCenter2.X + Cos(mA21 + AngArc2 * (1# - T * iPerc2)) * mRadius2
+            Out.Y = mCenter2.Y + Sin(mA21 + AngArc2 * (1# - T * iPerc2)) * mRadius2
         End If
         WArc = 2
     End If
@@ -999,4 +1046,173 @@ Friend Function PointDistance(CircleCenter As tVec2, OutArc1or2 As Long) As Doub
         OutArc1or2 = 2
     End If
 End Function
+
+
+
+Friend Sub SetImage(FileName As String, TargetSrf As cCairoSurface, Optional ImageScaleX As Double = 1, Optional ImageScaleY As Double = 1)
+
+    Set SourceSRF = Cairo.ImageList.AddImage("sourceImage", FileName)
+    Set SRF2 = TargetSrf
+
+    pW = SRF2.Width - 1
+    pH = SRF2.Height - 1
+
+    ImaScaleX = ImageScaleX
+    ImaScaleY = ImageScaleY
+
+    InvScaleX = 1 / ImaScaleX
+    InvScaleY = 1 / ImaScaleY
+End Sub
+
+
+
+Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Length As Double = 0)
+'    Dim ArrSource() As Long
+'    Dim ArrSrf2() As Long
+    Dim ArrSource() As Byte
+    Dim ArrSrf2() As Byte
+
+    Dim H2&, H22#
+    Dim DX#, DY#
+    Dim X&, Y&
+    Dim xF&, xT&
+    Dim yF&, yT&
+    Dim D#
+    Dim W&, H&
+    Dim a#
+    Dim GetX#, GetY#
+    Dim bA        As tVec2
+    Dim bB        As tVec2
+    Dim SgnClockWise1 As Double
+    Dim SgnClockWise2 As Double
+    Dim X4        As Long
+    Dim GetX4     As Long
+    Dim Alpha#
+    Dim Klen#
+
+
+    Dim dmin1#, dmax1#
+    Dim dmin2#, dmax2#
+
+    If ClearScreen Then CC.SetSourceRGB 0.33, 0.33, 0.33: CC.Paint
+
+    '    SourceSRF.BindToArrayLong ArrSource
+    '    SRF2.BindToArrayLong ArrSrf2
+    SourceSRF.BindToArray ArrSource
+    SRF2.BindToArray ArrSrf2
+
+    W = UBound(ArrSource, 1) \ 4
+    H = UBound(ArrSource, 2)
+
+    H2 = H / 2
+    H22 = H2 * H2
+    If Length Then Klen = Length / mLengthTot Else: Klen = 1
+
+    GetBounds bA, bB
+
+    xF = bA.X - H2 * ImaScaleY
+    yF = bA.Y - H2 * ImaScaleY
+    xT = bB.X + H2 * ImaScaleY
+    yT = bB.Y + H2 * ImaScaleY
+
+    If xF < 0 Then xF = 0
+    If yF < 0 Then yF = 0
+    If xT > pW Then xT = pW
+    If yT > pH Then yT = pH
+
+    dmin1 = mRadius1 - H2 * ImaScaleY
+    dmin1 = Sgn(dmin1) * dmin1 * dmin1
+    dmax1 = mRadius1 + H2 * ImaScaleY
+    dmax1 = dmax1 * dmax1
+
+    dmin2 = mRadius2 - H2 * ImaScaleY
+    dmin2 = Sgn(dmin2) * dmin2 * dmin2
+    dmax2 = mRadius2 + H2 * ImaScaleY
+    dmax2 = dmax2 * dmax2
+
+    If mClockWise1 Then SgnClockWise1 = 1 Else: SgnClockWise1 = -1
+    If mClockWise2 Then SgnClockWise2 = 1 Else: SgnClockWise2 = -1
+
+    For X = xF To xT
+        X4 = X * 4
+        For Y = yF To yT
+            DX = X - mCenter1.X
+            DY = Y - mCenter1.Y
+            'D = Sqr(DX * DX + DY * DY) - mRadius1
+            'If Abs(D) < H2 Then
+            D = DX * DX + DY * DY
+            If D > dmin1 And D < dmax1 Then
+                a = Atan2(DX, DY)
+                If IsAngBetween(a, mA11, mA12) Then
+                    D = Sqr(D) - mRadius1
+                    GetY = H2 - D * SgnClockWise1 * InvScaleY
+                    If mClockWise1 Then
+                        GetX = AngleDIFF(a, mA11) * mRadius1
+                    Else
+                        GetX = -AngleDIFF(a, mA12) * mRadius1
+                    End If
+                    GetX = (GetX * InvScaleX * Klen) Mod W
+                    GetY = GetY Mod H
+                    '                    ArrSrf2(X, Y) = ArrSource(GetX, GetY)
+                    GetX4 = GetX * 4&
+                    '                            ArrSrf2(X4, Y) = ArrSource(GetX4, GetY)
+
+                    Alpha = ArrSource(GetX4 + 3&, GetY) * 3.92156862745098E-03    '/255
+                    If Alpha Then
+                        ColorMixByAlpha ArrSource(GetX4 + 2&, GetY), ArrSource(GetX4 + 1&, GetY), ArrSource(GetX4, GetY), Alpha, _
+                                        ArrSrf2(X4 + 2&, Y), ArrSrf2(X4 + 1&, Y), ArrSrf2(X4, Y)
+                    End If
+                End If
+            End If
+            DX = X - mCenter2.X
+            DY = Y - mCenter2.Y
+            'D = Sqr(DX * DX + DY * DY) - mRadius2
+            'If Abs(D) < H2 Then
+            D = DX * DX + DY * DY
+            If D > dmin2 And D < dmax2 Then
+                a = Atan2(DX, DY)
+                If IsAngBetween(a, mA21, mA22) Then
+                    D = Sqr(D) - mRadius2
+                    GetY = H2 - D * SgnClockWise2 * InvScaleY
+
+                    If mClockWise2 Then
+                        GetX = AngleDIFF(a, mA21) * mRadius2
+                    Else
+                        GetX = -AngleDIFF(a, mA22) * mRadius2
+                    End If
+                    GetX = GetX + mLengthArc1
+                    GetX = (GetX * InvScaleX * Klen) Mod W
+                    GetY = GetY Mod H
+                    '                    ArrSrf2(X, Y) = ArrSource(GetX, GetY)
+                    GetX4 = GetX * 4&
+                    '                                                ArrSrf2(X4, Y) = ArrSource(GetX4, GetY)
+
+                    Alpha = ArrSource(GetX4 + 3&, GetY) * 3.92156862745098E-03
+                    If Alpha Then
+                        ColorMixByAlpha ArrSource(GetX4 + 2&, GetY), ArrSource(GetX4 + 1&, GetY), ArrSource(GetX4, GetY), Alpha, _
+                                        ArrSrf2(X4 + 2&, Y), ArrSrf2(X4 + 1&, Y), ArrSrf2(X4, Y)
+                    End If
+                End If
+            End If
+
+        Next
+    Next
+
+
+
+
+    '    SourceSRF.ReleaseArrayLong ArrSource
+    '    SRF2.ReleaseArrayLong ArrSrf2
+
+    SourceSRF.ReleaseArray ArrSource
+    SRF2.ReleaseArray ArrSrf2
+
+
+
+End Sub
+Private Sub ColorMixByAlpha(iR As Byte, iG As Byte, iB As Byte, iAlpha As Double, outR As Byte, outG As Byte, outB As Byte)
+    outR = iR * (iAlpha) + outR * (1# - iAlpha)
+    outG = iG * (iAlpha) + outG * (1# - iAlpha)
+    outB = iB * (iAlpha) + outB * (1# - iAlpha)
+End Sub
 
