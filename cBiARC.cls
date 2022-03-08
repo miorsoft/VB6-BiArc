@@ -179,9 +179,9 @@ Friend Property Get ClockWise2() As Boolean
     ClockWise2 = mClockWise2
 End Property
 
-Friend Sub GetBounds(a As tVec2, b As tVec2)
-    a.X = min(min(mBound1.X, mBound2.X), min(mBound3.X, mBound4.X))
-    a.Y = min(min(mBound1.Y, mBound2.Y), min(mBound3.Y, mBound4.Y))
+Friend Sub GetBounds(A As tVec2, b As tVec2)
+    A.X = min(min(mBound1.X, mBound2.X), min(mBound3.X, mBound4.X))
+    A.Y = min(min(mBound1.Y, mBound2.Y), min(mBound3.Y, mBound4.Y))
     b.X = max(max(mBound1.X, mBound2.X), max(mBound3.X, mBound4.X))
     b.Y = max(max(mBound1.Y, mBound2.Y), max(mBound3.Y, mBound4.Y))
 
@@ -1079,7 +1079,7 @@ Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Lengt
     Dim yF&, yT&
     Dim D#
     Dim W&, H&
-    Dim a#
+    Dim A#
     Dim GetX#, GetY#
     Dim bA        As tVec2
     Dim bB        As tVec2
@@ -1142,14 +1142,14 @@ Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Lengt
             'If Abs(D) < H2 Then
             D = DX * DX + DY * DY
             If D > dmin1 And D < dmax1 Then
-                a = Atan2(DX, DY)
-                If IsAngBetween(a, mA11, mA12) Then
+                A = Atan2(DX, DY)
+                If IsAngBetween(A, mA11, mA12) Then
                     D = Sqr(D) - mRadius1
                     GetY = H2 - D * SgnClockWise1 * InvScaleY
                     If mClockWise1 Then
-                        GetX = AngleDIFF(a, mA11) * mRadius1
+                        GetX = AngleDIFF(A, mA11) * mRadius1
                     Else
-                        GetX = -AngleDIFF(a, mA12) * mRadius1
+                        GetX = -AngleDIFF(A, mA12) * mRadius1
                     End If
                     GetX = (GetX * InvScaleX * Klen) Mod W
                     GetY = GetY Mod H
@@ -1170,15 +1170,15 @@ Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Lengt
             'If Abs(D) < H2 Then
             D = DX * DX + DY * DY
             If D > dmin2 And D < dmax2 Then
-                a = Atan2(DX, DY)
-                If IsAngBetween(a, mA21, mA22) Then
+                A = Atan2(DX, DY)
+                If IsAngBetween(A, mA21, mA22) Then
                     D = Sqr(D) - mRadius2
                     GetY = H2 - D * SgnClockWise2 * InvScaleY
 
                     If mClockWise2 Then
-                        GetX = AngleDIFF(a, mA21) * mRadius2
+                        GetX = AngleDIFF(A, mA21) * mRadius2
                     Else
-                        GetX = -AngleDIFF(a, mA22) * mRadius2
+                        GetX = -AngleDIFF(A, mA22) * mRadius2
                     End If
                     GetX = GetX + mLengthArc1
                     GetX = (GetX * InvScaleX * Klen) Mod W
