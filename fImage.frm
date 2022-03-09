@@ -215,7 +215,7 @@ Private Sub PIC_Click()
 
 
     If Timer1.Enabled Then
-        I = (I + 1) Mod 5
+        I = (I + 1) Mod 8
         Select Case I
         Case 0
             BiArc.SetImage App.Path & "\res\Barbwire.png", SRF2
@@ -227,6 +227,13 @@ Private Sub PIC_Click()
             BiArc.SetImage App.Path & "\res\road1.png", SRF2
         Case 4
             BiArc.SetImage App.Path & "\res\Smoke3.png", SRF2
+        Case 5
+            BiArc.SetImage App.Path & "\res\Telephonecord.png", SRF2
+        Case 6
+            BiArc.SetImage App.Path & "\res\Thorns.png", SRF2
+        Case 7
+            BiArc.SetImage App.Path & "\res\FloralStripe.png", SRF2
+
         End Select
 
 
@@ -241,9 +248,16 @@ Private Sub PIC_Click()
             BAPath.SetupImage App.Path & "\res\road1.png", SRF2, ScaleX, ScaleY
         Case 4
             BAPath.SetupImage App.Path & "\res\Smoke3.png", SRF2, ScaleX, ScaleY
+        Case 5
+            BAPath.SetupImage App.Path & "\res\Telephonecord.png", SRF2, ScaleX, ScaleY
+        Case 6
+            BAPath.SetupImage App.Path & "\res\Thorns.png", SRF2, ScaleX, ScaleY
+        Case 7
+            BAPath.SetupImage App.Path & "\res\FloralStripe.png", SRF2, ScaleX, ScaleY
+
         End Select
 
-
+        'FloralStripe
 
     End If
 

@@ -161,7 +161,7 @@ Private Sub Form_Load()
     BiArc.CALC
 
     '    cCF_Click
-    cBIimage_Click
+    cBIimage_Click '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 End Sub
 
