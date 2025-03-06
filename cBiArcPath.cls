@@ -31,7 +31,7 @@ Private mTotalLength As Double
 Private mClosed   As Boolean
 
 '----------- DRAW Image
-Private Srf       As cCairoSurface
+Private SRF       As cCairoSurface
 Private SourceSRF As cCairoSurface
 Private CC        As cCairoContext
 Private pW        As Long
@@ -51,7 +51,7 @@ Friend Property Get Length() As Double
     Length = mTotalLength
 End Property
 
-Friend Property Get Point(N As Long) As tVec2
+Friend Property Get Point(ByVal N As Long) As tVec2
     If N < 1 Then Exit Property
     If N > NP Then Exit Property
     If N = NP Then
@@ -60,12 +60,26 @@ Friend Property Get Point(N As Long) As tVec2
         Point = BiArc(N).Point1
     End If
 End Property
-Friend Sub SetPoint(N As Long, Pos As tVec2, Optional autoTangent As Boolean = False)
+
+'Friend Property Let Point(N As Long, pt As tVec2)
+'    If N < 1 Then Exit Property
+'    If N > NP Then Exit Property
+'    If N = NP Then
+'         BiArc(N - 1).Point2 = pt
+'    Else
+'         BiArc(N).Point1 = pt
+'    End If
+'End Property
+
+
+Friend Sub SetPoint(ByVal N As Long, Pos As tVec2, Optional autoTangent As Boolean = False)
+
+
     If N < NP Then BiArc(N).Point1 = Pos
     If N > 1 Then BiArc(N - 1).Point2 = Pos
     If autoTangent Then AutoSetTangents
 End Sub
-Friend Property Get TangDir(N As Long) As tVec2
+Friend Property Get TangDir(ByVal N As Long) As tVec2
     If N < 1 Then Exit Property
     If N > NP Then Exit Property
     If N = NP Then
@@ -117,8 +131,8 @@ Friend Sub AddPointAndTangDirection(P As tVec2, TangDir As tVec2)
     AddPointAndControlPoint P, SUM2(P, TangDir)
 End Sub
 
-Friend Sub SetPointTangStart(PointN As Long, TangentStart As tVec2, Optional IsDirection As Boolean = False)
-    If PointN > NP - 1 Then Exit Sub             'Last point hasn't TangStart
+Friend Sub SetPointTangStart(ByVal PointN As Long, TangentStart As tVec2, Optional IsDirection As Boolean = False)
+    If PointN > NP - 1 Then Exit Sub    'Last point hasn't TangStart
     If IsDirection Then
         BiArc(PointN).ControlPt1 = SUM2(BiArc(PointN).Point1, TangentStart)
     Else
@@ -127,8 +141,8 @@ Friend Sub SetPointTangStart(PointN As Long, TangentStart As tVec2, Optional IsD
     BiArc(PointN).CALC
     pvUpdatePathLength
 End Sub
-Friend Sub SetPointTangArrive(PointN As Long, TangentArrive As tVec2, Optional IsDirection As Boolean = False)
-    If PointN < 2 Then Exit Sub                  '1st point hasnt arrive tangent
+Friend Sub SetPointTangArrive(ByVal PointN As Long, TangentArrive As tVec2, Optional IsDirection As Boolean = False)
+    If PointN < 2 Then Exit Sub   '1st point hasnt arrive tangent
     If PointN > NP Then Exit Sub
 
     If IsDirection Then
@@ -140,7 +154,7 @@ Friend Sub SetPointTangArrive(PointN As Long, TangentArrive As tVec2, Optional I
     pvUpdatePathLength
 End Sub
 
-Friend Sub SetPointTangent(PointN As Long, Tangent As tVec2, Optional IsDirection As Boolean = False)
+Friend Sub SetPointTangent(ByVal PointN As Long, Tangent As tVec2, Optional IsDirection As Boolean = False)
     SetPointTangStart PointN, Tangent, IsDirection
     SetPointTangArrive PointN, Tangent, IsDirection
 End Sub
@@ -157,7 +171,7 @@ Private Sub Class_Initialize()
     ReDim BiArc(0)
 End Sub
 
-Friend Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, _
+Friend Sub DRAW(CC As cCairoContext, ByVal Color As Long, ByVal Alpha As Double, ByVal Width As Double, _
                 Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
     Dim I&
     For I = 1 To NBia
@@ -172,7 +186,7 @@ Friend Sub DrawOnlyCairoArcs(CC As cCairoContext)
     For I = 1 To NBia: BiArc(I).DrawArcsReadyToFillStroke CC: Next
 End Sub
 
-Friend Sub DrawFilled(CC As cCairoContext, Color As Long, Alpha As Double)
+Friend Sub DrawFilled(CC As cCairoContext, ByVal Color As Long, ByVal Alpha As Double)
     CC.SetSourceColor Color, Alpha
     DrawOnlyCairoArcs CC
     CC.Fill
@@ -200,6 +214,26 @@ Friend Function InterpolatedPointAt(ByVal T As Double) As tVec2
     InterpolatedPointAt = BiArc(I).InterpolatedPointAt(T)
 
 End Function
+Friend Function InterpolatedTANGAt(ByVal T As Double) As tVec2
+    Dim currT     As Double
+    Dim I&, J&
+    If NP < 2 Then Exit Function
+    '--- FIND which Biarc "T" belong to.   (I)
+    T = T * mTotalLength
+    I = 0
+    Do
+        I = I + 1
+        currT = currT + BiArc(I).LengthTot
+    Loop While T > currT And I < NBia
+    '----------
+    For J = 1 To I - 1
+        T = T - BiArc(J).LengthTot
+    Next
+    T = T / BiArc(I).LengthTot
+
+    InterpolatedTANGAt = BiArc(I).InterpolatedTANGAt(T)
+
+End Function
 
 Friend Sub Destroy()
     NP = 0
@@ -212,6 +246,8 @@ Friend Sub AutoSetTangents()
     Dim I         As Long
     Dim Delta1 As tVec2, Delta2 As tVec2
     Dim NewTang   As tVec2
+
+
 
     For I = 2 To NP - 1
 
@@ -232,6 +268,7 @@ Friend Sub AutoSetTangents()
         SetPointTangent NP, DIFF2(Point(NP), Point(NP - 1)), True
         SetPointTangent 1, DIFF2(Point(2), Point(1)), True
     End If
+    
 
 End Sub
 
@@ -239,7 +276,7 @@ End Sub
 
 Friend Function CircleCollisionAndResponseUsingSide(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97, Optional LeftSide As Boolean = True) As tVec2
     Dim I         As Long
-    Dim D         As Double
+    Dim d         As Double
     Dim outCircle1or2 As Long
     Dim rr        As Double
     Dim A         As Double
@@ -251,15 +288,15 @@ Friend Function CircleCollisionAndResponseUsingSide(CircleCenter As tVec2, Vel A
     tRAD = CircleRadius
     For I = 1 To NBia
         With BiArc(I)
-            D = .CircleDistance(CircleCenter, CircleRadius, outCircle1or2, LeftSide)
-            If D < 0 Then
+            d = .CircleDistance(CircleCenter, CircleRadius, outCircle1or2, LeftSide)
+            If d < 0 Then
                 If LeftSide Then tRAD = CircleRadius Else: tRAD = -CircleRadius    ' USED
-                If outCircle1or2 = 1 Then        'Circle1
+                If outCircle1or2 = 1 Then    'Circle1
                     NORMAL = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
                     If .ClockWise1 Then rr = .Radius1 + tRAD Else: rr = .Radius1 - tRAD
                     NORMAL = MUL2(Normalize2(NORMAL), rr)
                     CircleCenter = SUM2(.Center1, NORMAL)
-                Else                             'Circle2
+                Else              'Circle2
                     NORMAL = Vec2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
                     If .ClockWise2 Then rr = .Radius2 + tRAD Else: rr = .Radius2 - tRAD
                     NORMAL = MUL2(Normalize2(NORMAL), rr)
@@ -285,7 +322,7 @@ End Function
 
 Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, ByVal CircleRadius As Double, Optional Restitution As Double = 0.97) As tVec2
     Dim I         As Long
-    Dim D         As Double
+    Dim d         As Double
     Dim outCircle1or2 As Long
     Dim rr        As Double
     Dim A         As Double
@@ -296,18 +333,18 @@ Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, 
     Dim cDist     As Double
     For I = 1 To NBia
         With BiArc(I)
-            D = .PointDistance(CircleCenter, outCircle1or2)    '<<<.......
+            d = .PointDistance(CircleCenter, outCircle1or2)    '<<<.......
             ' D>0 means the point is betweens a Arc Angle
-            If D > 0 Then D = D - CircleRadius
-            If D < 0 Then
+            If d > 0 Then d = d - CircleRadius
+            If d < 0 Then
                 '----------- BALL center displacement so that it's collinerar to curve
-                If outCircle1or2 = 1 Then        'Circle1
+                If outCircle1or2 = 1 Then    'Circle1
                     NORMAL = Vec2(CircleCenter.X - .Center1.X, CircleCenter.Y - .Center1.Y)
                     cDist = Length2(DIFF2(.Center1, CircleCenter))
                     If cDist < .Radius1 Then CircleRadius = -CircleRadius
                     NORMAL = MUL2(Normalize2(NORMAL), CircleRadius - (cDist - .Radius1))
                     CircleCenter = SUM2(CircleCenter, NORMAL)
-                Else                             'Circle2
+                Else              'Circle2
                     NORMAL = Vec2(CircleCenter.X - .Center2.X, CircleCenter.Y - .Center2.Y)
                     cDist = Length2(DIFF2(.Center2, CircleCenter))
                     If cDist < .Radius2 Then CircleRadius = -CircleRadius
@@ -328,7 +365,7 @@ Friend Function CircleCollisionAndResponse(CircleCenter As tVec2, Vel As tVec2, 
 End Function
 Friend Function CircleCollisionAndResponse2(BallCenter As tVec2, Vel As tVec2, ByVal BallRadius As Double, ByRef InOutAngVel As Double, Optional Restitution As Double = 0.97) As tVec2
     Dim I         As Long
-    Dim D         As Double
+    Dim d         As Double
     Dim outCircle1or2 As Long
     Dim rr        As Double
     Dim A         As Double
@@ -343,18 +380,19 @@ Friend Function CircleCollisionAndResponse2(BallCenter As tVec2, Vel As tVec2, B
     S = 1
     For I = 1 To NBia
         With BiArc(I)
-            D = .PointDistance(BallCenter, outCircle1or2)    '<<<.......
+            d = .PointDistance(BallCenter, outCircle1or2)    '<<<.......
             ' D>0 means the point is betweens a Arc Angle
-            If D > 0 Then D = D - BallRadius
-            If D < 0 Then
+            If d > 0 Then d = d - BallRadius
+            If d < 0 Then
+           
                 '----------- BALL center displacement so that it's collinerar to curve
-                If outCircle1or2 = 1 Then        'Circle1
+                If outCircle1or2 = 1 Then    'Circle1
                     NORMAL = Vec2(BallCenter.X - .Center1.X, BallCenter.Y - .Center1.Y)
                     cDist = Length2(DIFF2(.Center1, BallCenter))
                     If cDist < .Radius1 Then BallRadius = -BallRadius: S = -S
                     NORMAL = MUL2(Normalize2(NORMAL), BallRadius - (cDist - .Radius1))
                     BallCenter = SUM2(BallCenter, NORMAL)
-                Else                             'Circle2
+                Else              'Circle2
                     NORMAL = Vec2(BallCenter.X - .Center2.X, BallCenter.Y - .Center2.Y)
                     cDist = Length2(DIFF2(.Center2, BallCenter))
                     If cDist < .Radius2 Then BallRadius = -BallRadius: S = -S
@@ -372,7 +410,6 @@ Friend Function CircleCollisionAndResponse2(BallCenter As tVec2, Vel As tVec2, B
                 ' ?????????????????
                 'VelTangent = SUM2(MUL2(VelTangent, 0.9), MUL2(Rotate90(NORMAL), -0.01 * S * VelTDot * BallRadius * InOutAngVel))
 
-
                 '-----------
 
                 InOutAngVel = InOutAngVel * 0.5 + S * VelTDot / BallRadius
@@ -388,8 +425,8 @@ End Function
 
 
 Friend Sub SetupImage(SourceImageFileName As String, TargetSrf As cCairoSurface, Optional ScaleX As Double = 1, Optional ScaleY As Double = 1)
-    Set Srf = TargetSrf
-    Set CC = Srf.CreateContext
+    Set SRF = TargetSrf
+    Set CC = SRF.CreateContext
 
     ImaScaleX = ScaleX
     ImaScaleY = ScaleY
@@ -398,12 +435,12 @@ Friend Sub SetupImage(SourceImageFileName As String, TargetSrf As cCairoSurface,
 
     Set SourceSRF = Cairo.ImageList.AddImage("sourceImage", SourceImageFileName)
 
-    pW = Srf.Width - 1
-    pH = Srf.Height - 1
+    pW = SRF.Width - 1
+    pH = SRF.Height - 1
 
 End Sub
 
-Friend Sub SetupImageScale(ScaleX As Double, ScaleY As Double)
+Friend Sub SetupImageScale(ByVal ScaleX As Double, ByVal ScaleY As Double)
 
     ImaScaleX = ScaleX
     ImaScaleY = ScaleY
@@ -411,19 +448,19 @@ Friend Sub SetupImageScale(ScaleX As Double, ScaleY As Double)
     InvScaleY = 1 / ImaScaleY
 
 End Sub
-Friend Sub DrawIMAGE(ClearScreen As Boolean, Optional Length As Double = 0)
-'    Dim ArrSource() As Long
-'    Dim ArrSrf2() As Long
+Friend Sub DrawIMAGE(ByVal ClearScreen As Boolean, Optional Length As Double = 0)
+    '    Dim ArrSource() As Long
+    '    Dim ArrSrf2() As Long
     Dim ArrSource() As Byte
     Dim ArrSrf2() As Byte
 
     Dim H2&, H22#
-    Dim DX#, DY#
+    Dim dx#, dy#
     Dim X&, Y&
-    Dim xF&, xT&
-    Dim yF&, yT&
-    Dim D#
-    Dim W&, H&
+    Dim XF&, XT&
+    Dim YF&, YT&
+    Dim d#
+    Dim w&, h&
     Dim A#
     Dim GetX#, GetY#
     Dim bA        As tVec2
@@ -443,43 +480,42 @@ Friend Sub DrawIMAGE(ClearScreen As Boolean, Optional Length As Double = 0)
     '    SourceSRF.BindToArrayLong ArrSource
     '    Srf.BindToArrayLong ArrSrf2
     SourceSRF.BindToArray ArrSource
-    Srf.BindToArray ArrSrf2
+    SRF.BindToArray ArrSrf2
 
-    W = UBound(ArrSource, 1) \ 4
-    H = UBound(ArrSource, 2)
+    w = UBound(ArrSource, 1) \ 4
+    h = UBound(ArrSource, 2)
 
-    H2 = H / 2
+    H2 = h / 2
     H22 = H2 * H2
 
     If Length Then Klen = Length / mTotalLength Else: Klen = 1
 
     For I = 1 To NBia
         With BiArc(I)
+    
+        
             .GetBounds bA, bB
 
-            xF = bA.X - H2 * ImaScaleY
-            yF = bA.Y - H2 * ImaScaleY
-            xT = bB.X + H2 * ImaScaleY
-            yT = bB.Y + H2 * ImaScaleY
-
-
+            XF = bA.X - H2 * ImaScaleY
+            YF = bA.Y - H2 * ImaScaleY
+            XT = bB.X + H2 * ImaScaleY
+            YT = bB.Y + H2 * ImaScaleY
 
             If .ClockWise1 Then SgnClockWise1 = 1 Else: SgnClockWise1 = -1
             If .ClockWise2 Then SgnClockWise2 = 1 Else: SgnClockWise2 = -1
-
 
             'xF = min(.Center1.X - .Radius1 * SgnClockWise1, .Center2.X - .Radius2 * SgnClockWise2) - H2 * ImaScaleY
             'yF = min(.Center1.Y - .Radius1 * SgnClockWise1, .Center2.Y - .Radius2 * SgnClockWise2) - H2 * ImaScaleY
             'xT = max(.Center1.X + .Radius1 * SgnClockWise1, .Center2.X + .Radius2 * SgnClockWise2) + H2 * ImaScaleY
             'yT = max(.Center1.Y + .Radius1 * SgnClockWise1, .Center2.Y + .Radius2 * SgnClockWise2) + H2 * ImaScaleY
 
-            If xF < 0 Then xF = 0
-            If yF < 0 Then yF = 0
-            If xT > pW Then xT = pW
-            If yT > pH Then yT = pH
+            If XF < 0 Then XF = 0
+            If YF < 0 Then YF = 0
+            If XT > pW Then XT = pW
+            If YT > pH Then YT = pH
 
-''Debug
-'fImage.Caption = xF & " - " & xT & "   " & yF & " - " & yT
+            ''Debug
+            'fImage.Caption = xF & " - " & xT & "   " & yF & " - " & yT
 
             dmin1 = .Radius1 - H2 * ImaScaleY
             dmin1 = Sgn(dmin1) * dmin1 * dmin1
@@ -492,44 +528,46 @@ Friend Sub DrawIMAGE(ClearScreen As Boolean, Optional Length As Double = 0)
             dmax2 = dmax2 * dmax2
 
 
-            For X = xF To xT
+            For X = XF To XT
                 X4 = X * 4
-                For Y = yF To yT
-                    DX = X - .Center1.X
-                    DY = Y - .Center1.Y
-                    D = DX * DX + DY * DY
-                    If D > dmin1 And D < dmax1 Then
-                        A = Atan2(DX, DY)
+                For Y = YF To YT
+                    dx = X - .Center1.X
+                    dy = Y - .Center1.Y
+                    d = dx * dx + dy * dy
+                    If d > dmin1 And d < dmax1 Then
+                        A = Atan2(dx, dy)
                         If IsAngBetween(A, .A11, .A12) Then
-                            D = Sqr(D) - .Radius1
-                            GetY = H2 - D * SgnClockWise1 * InvScaleY
+                            d = Sqr(d) - .Radius1
+                            GetY = H2 - d * SgnClockWise1 * InvScaleY
                             If .ClockWise1 Then
                                 GetX = AngleDIFF(A, .A11) * .Radius1
                             Else
                                 GetX = -AngleDIFF(A, .A12) * .Radius1
                             End If
                             GetX = GetX + PrevLength
-                            GetX = (GetX * InvScaleX * Klen) Mod W
-                            GetY = GetY Mod H
+                            GetX = (GetX * InvScaleX * Klen) Mod w
+                            GetY = GetY Mod h
                             ' ArrSrf2(X, Y) = ArrSource(GetX, GetY)
                             GetX4 = GetX * 4&
                             '                            ArrSrf2(X4, Y) = ArrSource(GetX4, GetY)
 
-                            Alpha = ArrSource(GetX4 + 3&, GetY) * 3.92156862745098E-03
+                            Alpha = ArrSource(GetX4 + 3&, GetY)
                             If Alpha Then
+                            Alpha = Alpha * 3.92156862745098E-03
                                 ColorMixByAlpha ArrSource(GetX4 + 2&, GetY), ArrSource(GetX4 + 1&, GetY), ArrSource(GetX4, GetY), Alpha, _
                                                 ArrSrf2(X4 + 2&, Y), ArrSrf2(X4 + 1&, Y), ArrSrf2(X4, Y)
                             End If
                         End If
                     End If
-                    DX = X - .Center2.X
-                    DY = Y - .Center2.Y
-                    D = DX * DX + DY * DY
-                    If D > dmin2 And D < dmax2 Then
-                        A = Atan2(DX, DY)
+                    dx = X - .Center2.X
+                    dy = Y - .Center2.Y
+                    d = dx * dx + dy * dy
+                    If d > dmin2 And d < dmax2 Then
+                        A = Atan2(dx, dy)
                         If IsAngBetween(A, .A21, .A22) Then
-                            D = Sqr(D) - .Radius2
-                            GetY = H2 - D * SgnClockWise2 * InvScaleY
+                        
+                            d = Sqr(d) - .Radius2
+                            GetY = H2 - d * SgnClockWise2 * InvScaleY
 
                             If .ClockWise2 Then
                                 GetX = AngleDIFF(A, .A21) * .Radius2
@@ -538,15 +576,17 @@ Friend Sub DrawIMAGE(ClearScreen As Boolean, Optional Length As Double = 0)
                             End If
                             GetX = GetX + .LengthArc1
                             GetX = GetX + PrevLength
-                            GetX = (GetX * InvScaleX * Klen) Mod W
-                            GetY = GetY Mod H
+                            GetX = (GetX * InvScaleX * Klen) Mod w
+                            GetY = GetY Mod h
                             'ArrSrf2(X, Y) = ArrSource(GetX, GetY)
                             GetX4 = GetX * 4&
 
                             '                            ArrSrf2(X4, Y) = ArrSource(GetX4, GetY)
 
-                            Alpha = ArrSource(GetX4 + 3&, GetY) * 3.92156862745098E-03
+                            Alpha = ArrSource(GetX4 + 3&, GetY)
                             If Alpha Then
+                            Alpha = Alpha * 3.92156862745098E-03
+                            
                                 ColorMixByAlpha ArrSource(GetX4 + 2&, GetY), ArrSource(GetX4 + 1&, GetY), ArrSource(GetX4, GetY), Alpha, _
                                                 ArrSrf2(X4 + 2&, Y), ArrSrf2(X4 + 1&, Y), ArrSrf2(X4, Y)
                             End If
@@ -559,36 +599,36 @@ Friend Sub DrawIMAGE(ClearScreen As Boolean, Optional Length As Double = 0)
             PrevLength = PrevLength + .LengthTot
 
         End With
-    Next                                         'biarc
+    Next                          'biarc
 
     '
     '    SourceSRF.ReleaseArrayLong ArrSource
     '    Srf.ReleaseArrayLong ArrSrf2
 
     SourceSRF.ReleaseArray ArrSource
-    Srf.ReleaseArray ArrSrf2
+    SRF.ReleaseArray ArrSrf2
 
 
 End Sub
 
 
 
-Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
+Friend Sub DrawIMAGEAA(ByVal ClearScreen As Boolean, Optional Length As Double = 0)
 
-' TESTING Source Pixel AA  (not so good)
+    ' TESTING Source Pixel AA  (not so good)
 
-'    Dim ArrSource() As Long
-'    Dim ArrSrf2() As Long
+    '    Dim ArrSource() As Long
+    '    Dim ArrSrf2() As Long
     Dim ArrSource() As Byte
     Dim ArrSrf2() As Byte
 
     Dim H2&, H22#
-    Dim DX#, DY#
+    Dim dx#, dy#
     Dim X&, Y&
-    Dim xF&, xT&
-    Dim yF&, yT&
-    Dim D#
-    Dim W&, H&
+    Dim XF&, XT&
+    Dim YF&, YT&
+    Dim d#
+    Dim w&, h&
     Dim A#
     Dim GetX#, GetY#
     Dim bA        As tVec2
@@ -609,12 +649,12 @@ Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
     '    SourceSRF.BindToArrayLong ArrSource
     '    Srf.BindToArrayLong ArrSrf2
     SourceSRF.BindToArray ArrSource
-    Srf.BindToArray ArrSrf2
+    SRF.BindToArray ArrSrf2
 
-    W = UBound(ArrSource, 1) \ 4
-    H = UBound(ArrSource, 2)
+    w = UBound(ArrSource, 1) \ 4
+    h = UBound(ArrSource, 2)
 
-    H2 = H / 2
+    H2 = h / 2
     H22 = H2 * H2
 
     If Length Then Klen = Length / mTotalLength Else: Klen = 1
@@ -631,15 +671,15 @@ Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
         With BiArc(I)
             .GetBounds bA, bB
 
-            xF = bA.X - H2 * ImaScaleY
-            yF = bA.Y - H2 * ImaScaleY
-            xT = bB.X + H2 * ImaScaleY
-            yT = bB.Y + H2 * ImaScaleY
+            XF = bA.X - H2 * ImaScaleY
+            YF = bA.Y - H2 * ImaScaleY
+            XT = bB.X + H2 * ImaScaleY
+            YT = bB.Y + H2 * ImaScaleY
 
-            If xF < 0 Then xF = 0
-            If yF < 0 Then yF = 0
-            If xT > pW Then xT = pW
-            If yT > pH Then yT = pH
+            If XF < 0 Then XF = 0
+            If YF < 0 Then YF = 0
+            If XT > pW Then XT = pW
+            If YT > pH Then YT = pH
 
             dmin1 = .Radius1 - H2 * ImaScaleY
             dmin1 = Sgn(dmin1) * dmin1 * dmin1
@@ -655,17 +695,17 @@ Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
             If .ClockWise2 Then SgnClockWise2 = 1 Else: SgnClockWise2 = -1
 
 
-            For X = xF To xT
+            For X = XF To XT
                 X4 = X * 4
-                For Y = yF To yT
-                    DX = X - .Center1.X
-                    DY = Y - .Center1.Y
-                    D = DX * DX + DY * DY
-                    If D > dmin1 And D < dmax1 Then
-                        A = Atan2(DX, DY)
+                For Y = YF To YT
+                    dx = X - .Center1.X
+                    dy = Y - .Center1.Y
+                    d = dx * dx + dy * dy
+                    If d > dmin1 And d < dmax1 Then
+                        A = Atan2(dx, dy)
                         If IsAngBetween(A, .A11, .A12) Then
-                            D = Sqr(D) - .Radius1
-                            GetY = H2 - D * SgnClockWise1 * InvScaleY
+                            d = Sqr(d) - .Radius1
+                            GetY = H2 - d * SgnClockWise1 * InvScaleY
                             If .ClockWise1 Then
                                 GetX = AngleDIFF(A, .A11) * .Radius1
                             Else
@@ -674,9 +714,9 @@ Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
                             GetX = GetX + PrevLength
                             GetX = (GetX * InvScaleX * Klen)
                             GX = GetX
-                            GetX = GetX Mod W
+                            GetX = GetX Mod w
                             GY = GetY
-                            GetY = GetY Mod H
+                            GetY = GetY Mod h
                             ' ArrSrf2(X, Y) = ArrSource(GetX, GetY)
                             GetX4 = GetX * 4&
                             '                            ArrSrf2(X4, Y) = ArrSource(GetX4, GetY)
@@ -707,14 +747,14 @@ Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
                             End If
                         End If
                     End If
-                    DX = X - .Center2.X
-                    DY = Y - .Center2.Y
-                    D = DX * DX + DY * DY
-                    If D > dmin2 And D < dmax2 Then
-                        A = Atan2(DX, DY)
+                    dx = X - .Center2.X
+                    dy = Y - .Center2.Y
+                    d = dx * dx + dy * dy
+                    If d > dmin2 And d < dmax2 Then
+                        A = Atan2(dx, dy)
                         If IsAngBetween(A, .A21, .A22) Then
-                            D = Sqr(D) - .Radius2
-                            GetY = H2 - D * SgnClockWise2 * InvScaleY
+                            d = Sqr(d) - .Radius2
+                            GetY = H2 - d * SgnClockWise2 * InvScaleY
 
                             If .ClockWise2 Then
                                 GetX = AngleDIFF(A, .A21) * .Radius2
@@ -725,9 +765,9 @@ Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
                             GetX = GetX + PrevLength
                             GetX = (GetX * InvScaleX * Klen)
                             GX = GetX
-                            GetX = GetX Mod W
+                            GetX = GetX Mod w
                             GY = GetY
-                            GetY = GetY Mod H
+                            GetY = GetY Mod h
                             'ArrSrf2(X, Y) = ArrSource(GetX, GetY)
                             GetX4 = GetX * 4&
 
@@ -761,20 +801,20 @@ Friend Sub DrawIMAGEAA(ClearScreen As Boolean, Optional Length As Double = 0)
             PrevLength = PrevLength + .LengthTot
 
         End With
-    Next                                         'biarc
+    Next                          'biarc
 
     '
     '    SourceSRF.ReleaseArrayLong ArrSource
     '    Srf.ReleaseArrayLong ArrSrf2
 
     SourceSRF.ReleaseArray ArrSource
-    Srf.ReleaseArray ArrSrf2
+    SRF.ReleaseArray ArrSrf2
 
 
 
 
 End Sub
-Private Sub ColorMixByAlpha(iR As Byte, iG As Byte, iB As Byte, iAlpha As Double, outR As Byte, outG As Byte, outB As Byte)
+Private Sub ColorMixByAlpha(ByVal iR As Byte, ByVal iG As Byte, ByVal iB As Byte, ByVal iAlpha As Double, outR As Byte, outG As Byte, outB As Byte)
     outR = iR * (iAlpha) + outR * (1# - iAlpha)
     outG = iG * (iAlpha) + outG * (1# - iAlpha)
     outB = iB * (iAlpha) + outB * (1# - iAlpha)
@@ -787,8 +827,8 @@ Friend Sub DrawImageRC()
     Dim currT     As Double
     Dim I&, J&
     Dim fetta     As cCairoSurface
-    Dim H         As Long
-    Dim W         As Long
+    Dim h         As Long
+    Dim w         As Long
 
 
     Dim fettaOffset#
@@ -800,7 +840,7 @@ Friend Sub DrawImageRC()
     Dim A2#
     Dim tmpV      As tVec2
     Dim wA&
-    Dim T#, D#
+    Dim T#, d#
     Dim AO#
     Dim S#
     Dim H2#
@@ -814,21 +854,21 @@ Friend Sub DrawImageRC()
 
     Const PASSO   As Double = 25
 
-    W = SourceSRF.Width
-    H = SourceSRF.Height
-    H2 = H * 0.5
+    w = SourceSRF.Width
+    h = SourceSRF.Height
+    H2 = h * 0.5
     CC.SetSourceRGB 0.5, 0.5, 0.5: CC.Paint
 
 
-    Set fetta = Cairo.CreateSurface(PASSO, H)
+    Set fetta = Cairo.CreateSurface(PASSO, h)
 
 
 
     '    For T = 0 To mTotalLength Step passo
-    For D = 0 To mTotalLength Step PASSO
-        fettaOffset = D
+    For d = 0 To mTotalLength Step PASSO
+        fettaOffset = d
 
-        While fettaOffset > (W - PASSO): fettaOffset = fettaOffset - W: Wend
+        While fettaOffset > (w - PASSO): fettaOffset = fettaOffset - w: Wend
 
 
         I = 0
@@ -836,9 +876,9 @@ Friend Sub DrawImageRC()
         Do
             I = I + 1
             currT = currT + BiArc(I).LengthTot
-        Loop While D > currT And I < NBia
+        Loop While d > currT And I < NBia
         '----------
-        T = D
+        T = d
         For J = 1 To I - 1
             T = T - BiArc(J).LengthTot
         Next
@@ -847,7 +887,7 @@ Friend Sub DrawImageRC()
 
 
         With BiArc(I)
-            Set fetta = Cairo.CreateSurface(PASSO, H)
+            Set fetta = Cairo.CreateSurface(PASSO, h)
             With fetta.CreateContext
                 '                .SetSourceRGB 0.5, 0.5, 0.5: .Paint
                 .RenderSurfaceContent SourceSRF, -fettaOffset, 0
@@ -901,6 +941,13 @@ Friend Sub DrawImageRC()
         DoEvents
 
     Next
+
+
+End Sub
+
+
+Friend Sub Offset(Amount#)
+Dim I&
 
 
 End Sub

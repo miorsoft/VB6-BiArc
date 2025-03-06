@@ -58,9 +58,9 @@ Private Const arcColor2 As Long = vbRed
 
 Private mPoint1   As tVec2
 Private mPoint2   As tVec2
-Private mControlP1 As tVec2                      ' Tangent control Point
+Private mControlP1 As tVec2       ' Tangent control Point
 Private mControlP2 As tVec2
-Private mTangDir1 As tVec2                       'Normalized tangent Direction
+Private mTangDir1 As tVec2        'Normalized tangent Direction
 Private mTangDir2 As tVec2
 
 Private mCenter1  As tVec2
@@ -746,7 +746,7 @@ End Sub
 
 
 
-Public Sub CALC(Optional CustomDistance As Double = 0)
+Friend Sub CALC(Optional CustomDistance As Double = 0)
 
 
     Dim V         As tVec2
@@ -887,7 +887,7 @@ Public Sub CALC(Optional CustomDistance As Double = 0)
 
 End Sub
 
-Public Sub DRAW(CC As cCairoContext, Color As Long, Alpha As Double, Width As Double, Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
+Friend Sub DRAW(CC As cCairoContext, ByVal Color As Long, ByVal Alpha As Double, ByVal Width As Double, Optional Lines As Boolean = False, Optional FullCircles As Boolean = False)
 
 
     If Lines Then
@@ -922,7 +922,7 @@ End Sub
 
 
 
-Public Sub DrawArcsReadyToFillStroke(CC As cCairoContext)
+Friend Sub DrawArcsReadyToFillStroke(CC As cCairoContext)
     With CC
         If mClockWise1 Then
             .Arc mCenter1.X, mCenter1.Y, mRadius1, mA11, mA12
@@ -937,7 +937,7 @@ Public Sub DrawArcsReadyToFillStroke(CC As cCairoContext)
     End With
 End Sub
 Friend Function InterpolatedPointAt(ByVal T As Double, Optional WArc As Long = 0) As tVec2
-' Author miorsoft - reexre
+    ' Author miorsoft - reexre
     Dim Perc1#, Perc2#
     Dim iPerc1#, iPerc2#
 
@@ -949,7 +949,7 @@ Friend Function InterpolatedPointAt(ByVal T As Double, Optional WArc As Long = 0
     iPerc1 = 1# / Perc1
     iPerc2 = 1# / Perc2
 
-    If T < Perc1 Then                            ' First arc
+    If T < Perc1 Then             ' First arc
         If mClockWise1 Then
             Out.X = mCenter1.X + Cos(mA12 - AngArc1 * (1# - T * iPerc1)) * mRadius1
             Out.Y = mCenter1.Y + Sin(mA12 - AngArc1 * (1# - T * iPerc1)) * mRadius1
@@ -958,8 +958,8 @@ Friend Function InterpolatedPointAt(ByVal T As Double, Optional WArc As Long = 0
             Out.Y = mCenter1.Y + Sin(mA11 + AngArc1 * (1# - T * iPerc1)) * mRadius1
         End If
         WArc = 1
-    Else                                         ' Second arc
-        T = T - Perc1                            '<---
+    Else                          ' Second arc
+        T = T - Perc1             '<---
         If mClockWise2 Then
             Out.X = mCenter2.X + Cos(mA22 - AngArc2 * (1# - T * iPerc2)) * mRadius2
             Out.Y = mCenter2.Y + Sin(mA22 - AngArc2 * (1# - T * iPerc2)) * mRadius2
@@ -971,6 +971,50 @@ Friend Function InterpolatedPointAt(ByVal T As Double, Optional WArc As Long = 0
     End If
 
     InterpolatedPointAt = Out
+
+End Function
+
+Friend Function InterpolatedTANGAt(ByVal T As Double, Optional WArc As Long = 0) As tVec2
+    ' TO CORRECT (MAybe)
+    
+    ' Author miorsoft - reexre
+    Dim Perc1#, Perc2#
+    Dim iPerc1#, iPerc2#
+
+
+    Dim Out       As tVec2
+
+    Perc1 = mLengthArc1 / mLengthTot
+    Perc2 = mLengthArc2 / mLengthTot
+    iPerc1 = 1# / Perc1
+    iPerc2 = 1# / Perc2
+
+'    If T < Perc1 Then             ' First arc
+'        If mClockWise1 Then
+'            Out.X = mCenter1.X + Cos(mA12 - AngArc1 * (1# - T * iPerc1)) * mRadius1
+'            Out.Y = mCenter1.Y + Sin(mA12 - AngArc1 * (1# - T * iPerc1)) * mRadius1
+'        Else
+'            Out.X = mCenter1.X + Cos(mA11 + AngArc1 * (1# - T * iPerc1)) * mRadius1
+'            Out.Y = mCenter1.Y + Sin(mA11 + AngArc1 * (1# - T * iPerc1)) * mRadius1
+'        End If
+'        WArc = 1
+'    Else                          ' Second arc
+'        T = T - Perc1             '<---
+'        If mClockWise2 Then
+'            Out.X = mCenter2.X + Cos(mA22 - AngArc2 * (1# - T * iPerc2)) * mRadius2
+'            Out.Y = mCenter2.Y + Sin(mA22 - AngArc2 * (1# - T * iPerc2)) * mRadius2
+'        Else
+'            Out.X = mCenter2.X + Cos(mA21 + AngArc2 * (1# - T * iPerc2)) * mRadius2
+'            Out.Y = mCenter2.Y + Sin(mA21 + AngArc2 * (1# - T * iPerc2)) * mRadius2
+'        End If
+'        WArc = 2
+'    End If
+
+Out.X = mTangDir1.X * (1 - T) * Perc1 + mTangDir2.X * T * Perc2
+Out.Y = mTangDir1.Y * (1 - T) * Perc1 + mTangDir2.Y * T * Perc2
+'MsgBox Length2(Out)
+
+    InterpolatedTANGAt = Normalize2(Out)
 
 End Function
 
@@ -1009,8 +1053,8 @@ End Function
 '            End If
 '        End If
 'End Function
-Friend Function CircleDistance(CircleCenter As tVec2, CircleRadius As Double, OutArc1or2 As Long, Optional LeftSide As Boolean = True) As Double
-' returns signed distance of a circle
+Friend Function CircleDistance(CircleCenter As tVec2, ByVal CircleRadius As Double, ByRef OutArc1or2 As Long, Optional LeftSide As Boolean = True) As Double
+    ' returns signed distance of a circle
 
     Dim DistFromArc As Double
     If IsAngBetween(Atan2(CircleCenter.X - mCenter1.X, CircleCenter.Y - mCenter1.Y), _
@@ -1034,8 +1078,8 @@ Friend Function CircleDistance(CircleCenter As tVec2, CircleRadius As Double, Ou
     If CircleDistance < -CircleRadius Then CircleDistance = -CircleDistance
 End Function
 
-Friend Function PointDistance(CircleCenter As tVec2, OutArc1or2 As Long) As Double
-' Circle Speed cannot be bigger than Radius at each timestep
+Friend Function PointDistance(CircleCenter As tVec2, ByRef OutArc1or2 As Long) As Double
+    ' Circle Speed cannot be bigger than Radius at each timestep
     If IsAngBetween(Atan2(CircleCenter.X - mCenter1.X, CircleCenter.Y - mCenter1.Y), _
                     mA11, mA12) Then
         PointDistance = Abs(Length2(DIFF2(Center1, CircleCenter)) - mRadius1)
@@ -1066,19 +1110,19 @@ End Sub
 
 
 
-Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Length As Double = 0)
-'    Dim ArrSource() As Long
-'    Dim ArrSrf2() As Long
+Friend Sub DrawIMAGE(CC As cCairoContext, ByVal ClearScreen As Boolean, Optional Length As Double = 0)
+    '    Dim ArrSource() As Long
+    '    Dim ArrSrf2() As Long
     Dim ArrSource() As Byte
     Dim ArrSrf2() As Byte
 
     Dim H2&, H22#
-    Dim DX#, DY#
+    Dim dx#, dy#
     Dim X&, Y&
-    Dim xF&, xT&
-    Dim yF&, yT&
-    Dim D#
-    Dim W&, H&
+    Dim XF&, XT&
+    Dim YF&, YT&
+    Dim d#
+    Dim w&, h&
     Dim A#
     Dim GetX#, GetY#
     Dim bA        As tVec2
@@ -1101,24 +1145,24 @@ Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Lengt
     SourceSRF.BindToArray ArrSource
     SRF2.BindToArray ArrSrf2
 
-    W = UBound(ArrSource, 1) \ 4
-    H = UBound(ArrSource, 2)
+    w = UBound(ArrSource, 1) \ 4
+    h = UBound(ArrSource, 2)
 
-    H2 = H / 2
+    H2 = h / 2
     H22 = H2 * H2
     If Length Then Klen = Length / mLengthTot Else: Klen = 1
 
     GetBounds bA, bB
 
-    xF = bA.X - H2 * ImaScaleY
-    yF = bA.Y - H2 * ImaScaleY
-    xT = bB.X + H2 * ImaScaleY
-    yT = bB.Y + H2 * ImaScaleY
+    XF = bA.X - H2 * ImaScaleY
+    YF = bA.Y - H2 * ImaScaleY
+    XT = bB.X + H2 * ImaScaleY
+    YT = bB.Y + H2 * ImaScaleY
 
-    If xF < 0 Then xF = 0
-    If yF < 0 Then yF = 0
-    If xT > pW Then xT = pW
-    If yT > pH Then yT = pH
+    If XF < 0 Then XF = 0
+    If YF < 0 Then YF = 0
+    If XT > pW Then XT = pW
+    If YT > pH Then YT = pH
 
     dmin1 = mRadius1 - H2 * ImaScaleY
     dmin1 = Sgn(dmin1) * dmin1 * dmin1
@@ -1133,47 +1177,48 @@ Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Lengt
     If mClockWise1 Then SgnClockWise1 = 1 Else: SgnClockWise1 = -1
     If mClockWise2 Then SgnClockWise2 = 1 Else: SgnClockWise2 = -1
 
-    For X = xF To xT
+    For X = XF To XT
         X4 = X * 4
-        For Y = yF To yT
-            DX = X - mCenter1.X
-            DY = Y - mCenter1.Y
+        For Y = YF To YT
+            dx = X - mCenter1.X
+            dy = Y - mCenter1.Y
             'D = Sqr(DX * DX + DY * DY) - mRadius1
             'If Abs(D) < H2 Then
-            D = DX * DX + DY * DY
-            If D > dmin1 And D < dmax1 Then
-                A = Atan2(DX, DY)
+            d = dx * dx + dy * dy
+            If d > dmin1 And d < dmax1 Then
+                A = Atan2(dx, dy)
                 If IsAngBetween(A, mA11, mA12) Then
-                    D = Sqr(D) - mRadius1
-                    GetY = H2 - D * SgnClockWise1 * InvScaleY
+                    d = Sqr(d) - mRadius1
+                    GetY = H2 - d * SgnClockWise1 * InvScaleY
                     If mClockWise1 Then
                         GetX = AngleDIFF(A, mA11) * mRadius1
                     Else
                         GetX = -AngleDIFF(A, mA12) * mRadius1
                     End If
-                    GetX = (GetX * InvScaleX * Klen) Mod W
-                    GetY = GetY Mod H
+                    GetX = (GetX * InvScaleX * Klen) Mod w
+                    GetY = GetY Mod h
                     '                    ArrSrf2(X, Y) = ArrSource(GetX, GetY)
                     GetX4 = GetX * 4&
                     '                            ArrSrf2(X4, Y) = ArrSource(GetX4, GetY)
 
-                    Alpha = ArrSource(GetX4 + 3&, GetY) * 3.92156862745098E-03    '/255
+                    Alpha = ArrSource(GetX4 + 3&, GetY)
                     If Alpha Then
+                    Alpha = Alpha * 3.92156862745098E-03 '/255
                         ColorMixByAlpha ArrSource(GetX4 + 2&, GetY), ArrSource(GetX4 + 1&, GetY), ArrSource(GetX4, GetY), Alpha, _
                                         ArrSrf2(X4 + 2&, Y), ArrSrf2(X4 + 1&, Y), ArrSrf2(X4, Y)
                     End If
                 End If
             End If
-            DX = X - mCenter2.X
-            DY = Y - mCenter2.Y
+            dx = X - mCenter2.X
+            dy = Y - mCenter2.Y
             'D = Sqr(DX * DX + DY * DY) - mRadius2
             'If Abs(D) < H2 Then
-            D = DX * DX + DY * DY
-            If D > dmin2 And D < dmax2 Then
-                A = Atan2(DX, DY)
+            d = dx * dx + dy * dy
+            If d > dmin2 And d < dmax2 Then
+                A = Atan2(dx, dy)
                 If IsAngBetween(A, mA21, mA22) Then
-                    D = Sqr(D) - mRadius2
-                    GetY = H2 - D * SgnClockWise2 * InvScaleY
+                    d = Sqr(d) - mRadius2
+                    GetY = H2 - d * SgnClockWise2 * InvScaleY
 
                     If mClockWise2 Then
                         GetX = AngleDIFF(A, mA21) * mRadius2
@@ -1181,14 +1226,15 @@ Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Lengt
                         GetX = -AngleDIFF(A, mA22) * mRadius2
                     End If
                     GetX = GetX + mLengthArc1
-                    GetX = (GetX * InvScaleX * Klen) Mod W
-                    GetY = GetY Mod H
+                    GetX = (GetX * InvScaleX * Klen) Mod w
+                    GetY = GetY Mod h
                     '                    ArrSrf2(X, Y) = ArrSource(GetX, GetY)
                     GetX4 = GetX * 4&
                     '                                                ArrSrf2(X4, Y) = ArrSource(GetX4, GetY)
 
-                    Alpha = ArrSource(GetX4 + 3&, GetY) * 3.92156862745098E-03
+                    Alpha = ArrSource(GetX4 + 3&, GetY)
                     If Alpha Then
+                    Alpha = Alpha * 3.92156862745098E-03
                         ColorMixByAlpha ArrSource(GetX4 + 2&, GetY), ArrSource(GetX4 + 1&, GetY), ArrSource(GetX4, GetY), Alpha, _
                                         ArrSrf2(X4 + 2&, Y), ArrSrf2(X4 + 1&, Y), ArrSrf2(X4, Y)
                     End If
@@ -1210,9 +1256,10 @@ Friend Sub DrawIMAGE(CC As cCairoContext, ClearScreen As Boolean, Optional Lengt
 
 
 End Sub
-Private Sub ColorMixByAlpha(iR As Byte, iG As Byte, iB As Byte, iAlpha As Double, outR As Byte, outG As Byte, outB As Byte)
+Private Sub ColorMixByAlpha(ByVal iR As Byte, ByVal iG As Byte, ByVal iB As Byte, ByVal iAlpha As Double, outR As Byte, outG As Byte, outB As Byte)
     outR = iR * (iAlpha) + outR * (1# - iAlpha)
     outG = iG * (iAlpha) + outG * (1# - iAlpha)
     outB = iB * (iAlpha) + outB * (1# - iAlpha)
+     
 End Sub
 

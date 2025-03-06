@@ -1,6 +1,6 @@
 Type=Exe
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
-Reference=*\G{CE4F61C1-7072-4180-9107-B38562AB6ABE}#c2.0#0#..\..\VB6\____PhotoModularFX_0_3\BIN\RC6.dll#RC6
+Reference=*\G{CE4F61C1-7072-4180-9107-B38562AB6ABE}#11d.0#0#..\..\VB6\____PhotoModularFX_0_3\BIN\RC6.dll#RC6
 Form=fMain.frm
 Module=mVEC2D; mVEC2D.bas
 Class=cBiARC; cBiARC.cls
